@@ -13,10 +13,14 @@ git clone https://github.com/berres2002/cosmo.git
 ```
 
 [THOR]('https://github.com/moeyensj/thor') is currently used for some of its utilities, so that needs to also be downloaded:
-```git clone git@github.com:moeyensj/thor.git``` 
+```
+git clone git@github.com:moeyensj/thor.git
+``` 
 
 Or, 
-```git clone https://github.com/moeyensj/thor.git``` 
+```
+git clone https://github.com/moeyensj/thor.git
+``` 
 
 Then install THOR via:
 ```
