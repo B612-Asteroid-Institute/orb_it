@@ -5,14 +5,21 @@ import pyoorb as oo
 import pandas as pd
 from astropy.time import Time
 
-from ..utils import _checkTime
-from .backend import Backend
+#from ..utils import _checkTime
+#from .backend import Backend
 
 PYOORB_CONFIG = {
     "dynamical_model" : "N",
     "ephemeris_file" : "de430.dat"
 }
+# Fake backend class
+class Backend:
 
+    def __init__(self, name="Backend", **kwargs):
+        self.__dict__.update(kwargs)
+        self.name = name
+        self.is_setup = False
+        return
 class PYOORB(Backend):
 
     def __init__(self, **kwargs):
@@ -119,8 +126,8 @@ class PYOORB(Backend):
             orbit_type = [1 for i in range(num_orbits)]
         elif orbit_type == "cometary":
             orbit_type = [2 for i in range(num_orbits)]
-            H = M1
-            G = K1
+            H = magnitude
+            G = slope
             orbits_[:, 1:5] = np.radians(orbits_[:, 1:5])
         elif orbit_type == "keplerian":
             orbit_type = [3 for i in range(num_orbits)]
@@ -447,7 +454,7 @@ class PYOORB(Backend):
 
         ephemeris_dfs = []
         for observatory_code, observation_times in observers.items():
-            _checkTime(observation_times, "observation_times")
+            #_checkTime(observation_times, "observation_times")
 
             # Convert epochs into PYOORB format
             epochs_pyoorb = self._configureEpochs(observation_times.utc.mjd, "UTC")

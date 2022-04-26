@@ -10,7 +10,7 @@ from astropy.time import Time
 
 #from ..utils import writeToADES
 #from .backend import Backend
-from .eph2ades import ADES
+from ..utils import ADES
 aobj=ADES(None,None,None,None,None)
 
 FINDORB_CONFIG = {
@@ -39,6 +39,7 @@ ADES_KWARGS = {
     "telescope_fratio" : None,
     "comment" : None
 }
+# Fake backend class
 class Backend:
 
     def __init__(self, name="Backend", **kwargs):
