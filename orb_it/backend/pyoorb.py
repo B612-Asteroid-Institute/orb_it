@@ -4,6 +4,11 @@ import numpy as np
 import pyoorb as oo
 import pandas as pd
 from astropy.time import Time
+import subprocess
+import uuid
+import tempfile
+
+rad = np.pi / 180.0
 
 #from ..utils import _checkTime
 #from .backend import Backend
@@ -493,3 +498,154 @@ class PYOORB(Backend):
             ephemeris["orbit_id"] = orbits.ids[ephemeris["orbit_id"].values]
 
         return ephemeris
+
+    def _orbitDetermination(self,observations,out_dir=None):
+        od_res = []
+        _observations = observations.copy()
+        _observations["rmsRA"] = _observations["rmsRA"].values / 1000 # Conversion from milliarcseconds to arcseconds
+        _observations["rmsDec"] = _observations["rmsDec"].values / 1000
+        
+        id_present = False
+        id_col = None
+        if "permID" in _observations.columns.values:
+            id_present = True
+            id_col = "permID"
+        if "provID" in _observations.columns.values:
+            id_present = True
+            id_col = "provID"
+        if "trkSub" in _observations.columns.values:
+            id_present = True
+            id_col = "trkSub"
+        if not id_present:
+            _observations["trkSub"] = _observations["orbit_id"]
+            id_col = "trkSub"
+        for i, orbit_id in enumerate(_observations[id_col].unique()):
+
+            with tempfile.TemporaryDirectory() as temp_dir:
+                uid = str(uuid.uuid4())[:7]
+                orbit_id_short = f"o{i:07d}"
+                if "orbit_id" in _observations.columns:
+                    orbit_id_i = "_".join(orbit_id.split(" "))
+                    orbit_id_i = "_".join(orbit_id_i.split("/"))
+                else:
+                    orbit_id_i = orbit_id_short
+                    
+                temp_dir_i = os.path.join(temp_dir,orbit_id_i)
+                os.makedirs(temp_dir_i, exist_ok=True)
+                mask = _observations[id_col].isin([orbit_id])
+                object_observations = _observations[mask].copy()
+                object_observations.loc[:, id_col] = orbit_id_short
+                object_observations.reset_index(inplace=True, drop=True)
+                
+                ras=object_observations.RA_deg.values
+                decs=object_observations.Dec_deg.values
+                times=object_observations.mjd_utc.values
+                magv=object_observations['VMag'].values
+                obscode=object_observations.observatory_code.values
+                # RMS_RA(arcsec)   RMS_DEC(arcsec)  RMS_MAG S2N Secret_name
+                # Going to add this in when I figure out rms values
+                res = '1.0000000000   1.0000000000  -1.0000000000 -0.1000000E+01 X'
+                # APPMAG FILTER
+                # Going to add this in when i figure out magnitude values
+                magfil= '23.7000000000 r'
+                dir1=os.path.join(temp_dir_i,orbit_id_i+'_genorb.des')
+                with open(dir1,mode='w') as f:
+                    for j in range(len(times)):
+                        f.write(uid+' '+f"{times[j]:0.10f}"+' O '+f"{ras[j]:0.10f}  {decs[j]:0.10f}"+'  '+magfil+'  '+obscode[j]+'   '+res+'\n')
+                    f.close()
+                call = ['oorb',
+                    '--conf=/mnt/c/Users/berre/Desktop/CODE/Python/b612/oorb/main/oorb.conf',
+                    '--task=ranging',
+                    '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb.des'),
+                    '--orb-out='+os.path.join(temp_dir_i,orbit_id_i+'_ranging_out.txt'),
+
+                ]
+                self.tryCall(call,temp_dir_i,uid)
+                v1=open(os.path.join(temp_dir_i,uid+'.sor')).read().split('\n')
+                for i in range(len(v1)):
+                    if 'ORBITAL-ELEMENT PDF' in v1[i] and 'Maximum likelihood (ML) orbit' in v1[i+2]:
+                        s0=v1[i+1]
+                        s1=v1[i+3]
+                        break
+                ep0 = np.float64(s0.split()[7])-2400000.5
+                n1=np.array([s1.split()[4:]],dtype=np.float64)
+                # add _configureOrbits call here
+                orb2 = self._configureOrbits(n1,[ep0],'keplerian','TT',None,None)
+                conv1=oo.pyoorb.oorb_element_transformation(in_orbits=orb2,in_element_type=2)
+                h2='!!OID FORMAT q e i Omega argperi t_p H t_0 INDEX N_PAR MOID COMPCODE'
+                st2a=[uid,
+                    ' COM',
+                    f" {conv1[0][0][1]:0.12f} ",
+                    f"{conv1[0][0][2]:0.12f} ",
+                    f"{conv1[0][0][3]/rad:0.12f} ",
+                    f"{conv1[0][0][4]/rad:0.12f} ",
+                    f"{conv1[0][0][5]/rad:0.12f} ",
+                    f"{conv1[0][0][6]:0.12f} ",
+                    f"{conv1[0][0][10]:0.12f} ",
+                    f"{conv1[0][0][8]:0.12f}",
+                    " 1 6 -1 HORIZONS"]
+                st2=''.join(st2a)
+                with open(os.path.join(temp_dir_i,orbit_id_i+'_orb_in.des'),'w') as f:
+                    f.write(h2+'\n')
+                    f.write(st2)
+                    f.close()
+                call = ['oorb',
+                    '--conf=/home/berres2002/miniconda3/envs/aidan2/etc/oorb.conf',
+                    '--task=lsl',
+                    '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb.des'),
+                    '--orb-in='+os.path.join(temp_dir_i,orbit_id_i+'_orb_in.des'),
+                    '--orb-out='+os.path.join(temp_dir_i,orbit_id_i+'_lsl_out.txt')
+                ]
+                subprocess.run(call,cwd=temp_dir_i,timeout=90,capture_output=True)
+                
+                OD_COLUMNS=['orbit_id',
+                        'x',
+                        'y',
+                        'z',
+                        'vx',
+                        'vy',
+                        'vz',
+                        'epoch_tt_mjd',
+                        'sigma e1',
+                        'sigma e2',       
+                        'sigma e3',
+                        'sigma e4',
+                            'sigma e5',
+                            'sigma e6',
+                            'cor(e1,e2)',
+                            'cor(e1,e3)',
+                            'cor(e1,e4)',
+                            'cor(e1,e5)',
+                            'cor(e1,e6)',
+                            'cor(e2,e3)',
+                            'cor(e2,e4)',
+                            'cor(e2,e5)',
+                            'cor(e2,e6)',
+                            'cor(e3,e4)',
+                            'cor(e3,e5)',
+                            'cor(e3,e6)',
+                            'cor(e4,e5)',
+                            'cor(e4,e6)',
+                            'cor(e5,e6)',
+                        'H',
+                        'G']
+                
+                data=pd.read_csv(os.path.join(temp_dir_i,orbit_id_i+'_lsl_out.txt'),comment='#',header=None,delimiter='\s+',names=OD_COLUMNS)
+                data['orbit_id'] = orbit_id
+                od_res.append(data)
+        od_orbits = pd.concat(od_res, ignore_index=True)
+        return od_orbits
+
+    def tryCall(self,call,cwd,uid,tries=0,stop=5):
+        try:
+            subprocess.run(call,cwd=cwd,timeout=90,capture_output=False)
+            # CHECK THIS WHEN FINISHED
+            open(os.path.join(cwd,uid+'.sor')).read().split('\n')
+            return
+        except:
+            if tries >= stop:
+                raise subprocess.SubprocessError('Ranging has failed, all attempts have been used')
+            else:
+                print(f'WARNING: Ranging has failed, {tries+1} out of {stop} attempts until stop')
+                tries+=1
+                return self.tryCall(call,cwd,uid,tries)
