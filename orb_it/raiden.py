@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from astropy.time import Time
 from astropy import units as u
+from astroquery.jplhorizons import Horizons
 
 CARTESIAN_COLS = ["x", "y", "z", "vx", "vy", "vz"]
 CARTESIAN_UNITS = [u.au, u.au, u.au, u.au / u.d,  u.au / u.d,  u.au / u.d]
@@ -86,3 +87,58 @@ class Orbits():
                 raise IndexError
 
         return Orbits(self.df[i])
+
+def loadOrb(data):
+    '''
+    Load orbit data from a .csv file or pandas DataFrame.
+
+    Parameters
+    ----------
+    data: str or pandas.DataFrame
+        Path to the .csv file or pandas DataFrame containing the orbit data.
+        Must have the following columns:
+        x: float
+            x element of the state vector in Astronomical Units.
+        y: float
+            y element of the state vector in Astronomical Units.
+        z: float
+            z element of the state vector in Astronomical Units.
+        vx: float
+            x velocity element of the state vector in Astronomical Units per day.
+        vy: float
+            y velocity element of the state vector in Astronomical Units per day.
+        vz: float
+            z velocity element of the state vector in Astronomical Units per day.
+        epoch or mjd_tdb: float, also can be a astropy.time.core.Time object converted to float
+            Time of the state vector in mjd with a tdb scale.
+    
+    Returns
+    -------
+    orbits : orbit object `~validate_findorb.raiden.Orbits`
+    '''
+    return Orbits(data)
+
+def getOrbHorizons(target, t0):
+    '''
+    Gets the orbital state vector from JPL Horizons for a given target and time.
+
+    Parameters
+    ----------
+    target : str or list of str
+        Name(s) of the target to get the orbital state vector for.
+    t0 : astropy.time.core.Time
+        Time object with scale='tdb' format='mjd' for the time of the state vector.
+
+    Returns
+    -------
+    orbits: orbit object `~validate_findorb.raiden.Orbits`
+    '''
+    
+    if type(target) == str:
+        target = [target]
+    targets_i = []
+    for i in target:
+        hobj = Horizons(id=i,epochs=t0.tdb.mjd,location='@sun').vectors(refplane="ecliptic",aberrations="geometric",)
+        targets_i.append(hobj.to_pandas())
+    targets = pd.concat(targets_i, ignore_index=True)
+    return Orbits(targets,ids=targets['targetname'].values,epochs=t0+np.zeros(len(target)))
