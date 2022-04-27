@@ -502,8 +502,22 @@ class PYOORB(Backend):
     def _orbitDetermination(self,observations,out_dir=None):
         od_res = []
         _observations = observations.copy()
-        _observations["rmsRA"] = _observations["rmsRA"].values / 1000 # Conversion from milliarcseconds to arcseconds
-        _observations["rmsDec"] = _observations["rmsDec"].values / 1000
+        # _observations.rename(
+        #     columns={
+        #         #"mjd_utc" : "mjd",
+        #         #"RA_deg" : "ra",
+        #         #"Dec_deg" : "dec",
+        #         "RA_sigma_deg" : "rmsRA",
+        #         "Dec_sigma_deg" : "rmsDec",
+        #         #"mag_sigma" : "rmsMag",
+        #         #"mjd_sigma_seconds" : "rmsTime",
+        #         #"filter" : "band",
+        #         #"observatory_code" : "stn",
+        #     },
+        #     inplace=True
+        # )
+        _observations["rmsRA"] = _observations["RA_sigma_mas"].values / 1000 # Conversion from milliarcseconds to arcseconds
+        _observations["rmsDec"] = _observations["Dec_sigma_mas"].values / 1000
         
         id_present = False
         id_col = None
@@ -544,7 +558,7 @@ class PYOORB(Backend):
                 obscode=object_observations.observatory_code.values
                 # RMS_RA(arcsec)   RMS_DEC(arcsec)  RMS_MAG S2N Secret_name
                 # Going to add this in when I figure out rms values
-                res = '1.0000000000   1.0000000000  -1.0000000000 -0.1000000E+01 X'
+                res = '0.0000000000   0.0000000000  -1.0000000000 -0.1000000E+01 X'
                 # APPMAG FILTER
                 # Going to add this in when i figure out magnitude values
                 magfil= '23.7000000000 r'

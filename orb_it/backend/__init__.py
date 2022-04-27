@@ -1,2 +1,2 @@
 from .pyoorb import *
-from .wrapper import *
+from .findorb import *
