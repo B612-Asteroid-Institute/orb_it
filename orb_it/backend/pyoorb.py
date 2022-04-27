@@ -554,7 +554,7 @@ class PYOORB(Backend):
                         f.write(uid+' '+f"{times[j]:0.10f}"+' O '+f"{ras[j]:0.10f}  {decs[j]:0.10f}"+'  '+magfil+'  '+obscode[j]+'   '+res+'\n')
                     f.close()
                 call = ['oorb',
-                    '--conf=/mnt/c/Users/berre/Desktop/CODE/Python/b612/oorb/main/oorb.conf',
+                    '--conf=/mnt/c/Users/berre/Desktop/CODE/Python/b612/cosmo/orb_it/data/oorb.conf',
                     '--task=ranging',
                     '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb.des'),
                     '--orb-out='+os.path.join(temp_dir_i,orbit_id_i+'_ranging_out.txt'),
@@ -590,7 +590,7 @@ class PYOORB(Backend):
                     f.write(st2)
                     f.close()
                 call = ['oorb',
-                    '--conf=/home/berres2002/miniconda3/envs/aidan2/etc/oorb.conf',
+                    '--conf=/mnt/c/Users/berre/Desktop/CODE/Python/b612/cosmo/orb_it/data/oorbN.conf',
                     '--task=lsl',
                     '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb.des'),
                     '--orb-in='+os.path.join(temp_dir_i,orbit_id_i+'_orb_in.des'),
@@ -598,40 +598,43 @@ class PYOORB(Backend):
                 ]
                 subprocess.run(call,cwd=temp_dir_i,timeout=90,capture_output=True)
                 
-                OD_COLUMNS=['orbit_id',
-                        'x',
-                        'y',
-                        'z',
-                        'vx',
-                        'vy',
-                        'vz',
-                        'epoch_tt_mjd',
-                        'sigma e1',
-                        'sigma e2',       
-                        'sigma e3',
-                        'sigma e4',
-                            'sigma e5',
-                            'sigma e6',
-                            'cor(e1,e2)',
-                            'cor(e1,e3)',
-                            'cor(e1,e4)',
-                            'cor(e1,e5)',
-                            'cor(e1,e6)',
-                            'cor(e2,e3)',
-                            'cor(e2,e4)',
-                            'cor(e2,e5)',
-                            'cor(e2,e6)',
-                            'cor(e3,e4)',
-                            'cor(e3,e5)',
-                            'cor(e3,e6)',
-                            'cor(e4,e5)',
-                            'cor(e4,e6)',
-                            'cor(e5,e6)',
-                        'H',
-                        'G']
+                OD_COLUMNS=[
+                    'orbit_id',
+                    'x',
+                    'y',
+                    'z',
+                    'vx',
+                    'vy',
+                    'vz',
+                    'epoch_tt_mjd',
+                    'sigma e1',
+                    'sigma e2',       
+                    'sigma e3',
+                    'sigma e4',
+                    'sigma e5',
+                    'sigma e6',
+                    'cor(e1,e2)',
+                    'cor(e1,e3)',
+                    'cor(e1,e4)',
+                    'cor(e1,e5)',
+                    'cor(e1,e6)',
+                    'cor(e2,e3)',
+                    'cor(e2,e4)',
+                    'cor(e2,e5)',
+                    'cor(e2,e6)',
+                    'cor(e3,e4)',
+                    'cor(e3,e5)',
+                    'cor(e3,e6)',
+                    'cor(e4,e5)',
+                    'cor(e4,e6)',
+                    'cor(e5,e6)',
+                    'H',
+                    'G'
+                ]
                 
                 data=pd.read_csv(os.path.join(temp_dir_i,orbit_id_i+'_lsl_out.txt'),comment='#',header=None,delimiter='\s+',names=OD_COLUMNS)
                 data['orbit_id'] = orbit_id
+                data.insert(1,'mjd_tdb',Time(data['epoch_tt_mjd'],format='mjd',scale='tt').tdb.mjd)
                 od_res.append(data)
         od_orbits = pd.concat(od_res, ignore_index=True)
         return od_orbits
