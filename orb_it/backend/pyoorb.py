@@ -16,7 +16,8 @@ rad = np.pi / 180.0
 
 PYOORB_CONFIG = {
     "dynamical_model" : "N",
-    "ephemeris_file" : "de430.dat"
+    "ephemeris_file" : "de430.dat",
+    "config_path": os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 }
 # Fake backend class
 class Backend:
@@ -584,7 +585,7 @@ class PYOORB(Backend):
                         f.write(f'{0}'+' '+f"{times[j]:0.10f}"+' O '+f"{ras[j]:0.10f}  {decs[j]:0.10f}"+'  '+magfil+'  '+obscode[j]+'   '+res+'\n')
                     f.close()
                 call = ['oorb',
-                                '--conf=/mnt/c/Users/berre/Desktop/CODE/Python/b612/cosmo/orb_it/data/oorb.conf',
+                                '--conf='+os.path.join(self.config_path,'oorb.conf'),
                                 '--task=ranging',
                                 '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb1.des'),
                                 '--separately'
@@ -618,7 +619,7 @@ class PYOORB(Backend):
                             " 1 6 -1 HORIZONS\n"]
                         f.write(''.join(st2a))
                 call = ['oorb',
-                                '--conf=/mnt/c/Users/berre/Desktop/CODE/Python/b612/cosmo/orb_it/data/oorbN.conf',
+                                '--conf='+os.path.join(self.config_path,'oorbN.conf'),
                                 '--task=lsl',
                                 '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb2.des'),
                                 '--orb-in='+os.path.join(temp_dir_i,orbit_id_i+'_orb_in.des'),
