@@ -7,6 +7,7 @@ from astropy.time import Time
 import subprocess
 import uuid
 import tempfile
+import glob
 
 rad = np.pi / 180.0
 
@@ -15,7 +16,8 @@ rad = np.pi / 180.0
 
 PYOORB_CONFIG = {
     "dynamical_model" : "N",
-    "ephemeris_file" : "de430.dat"
+    "ephemeris_file" : "de430.dat",
+    "config_path": os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 }
 # Fake backend class
 class Backend:
@@ -562,54 +564,67 @@ class PYOORB(Backend):
                 # APPMAG FILTER
                 # Going to add this in when i figure out magnitude values
                 magfil= '23.7000000000 r'
-                dir1=os.path.join(temp_dir_i,orbit_id_i+'_genorb.des')
+                
+                ind=np.arange(len(times))
+                ind1=np.array_split(ind,np.floor(len(times)/4))
+                z=0
+                k=0
+                val1 = []
+                dir1=os.path.join(temp_dir_i,orbit_id_i+'_genorb1.des')
                 with open(dir1,mode='w') as f:
                     for j in range(len(times)):
-                        f.write(uid+' '+f"{times[j]:0.10f}"+' O '+f"{ras[j]:0.10f}  {decs[j]:0.10f}"+'  '+magfil+'  '+obscode[j]+'   '+res+'\n')
+                        if z == len(ind1[k]):
+                            z=0
+                            k+=1
+                        f.write(f'{k}'+' '+f"{times[j]:0.10f}"+' O '+f"{ras[j]:0.10f}  {decs[j]:0.10f}"+'  '+magfil+'  '+obscode[j]+'   '+res+'\n')
+                        z+=1
+                    f.close()
+                dir1=os.path.join(temp_dir_i,orbit_id_i+'_genorb2.des')
+                with open(dir1,mode='w') as f:
+                    for j in range(len(times)):
+                        f.write(f'{0}'+' '+f"{times[j]:0.10f}"+' O '+f"{ras[j]:0.10f}  {decs[j]:0.10f}"+'  '+magfil+'  '+obscode[j]+'   '+res+'\n')
                     f.close()
                 call = ['oorb',
-                    '--conf=/mnt/c/Users/berre/Desktop/CODE/Python/b612/cosmo/orb_it/data/oorb.conf',
-                    '--task=ranging',
-                    '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb.des'),
-                    '--orb-out='+os.path.join(temp_dir_i,orbit_id_i+'_ranging_out.txt'),
-
-                ]
-                self.tryCall(call,temp_dir_i,uid)
-                v1=open(os.path.join(temp_dir_i,uid+'.sor')).read().split('\n')
-                for i in range(len(v1)):
-                    if 'ORBITAL-ELEMENT PDF' in v1[i] and 'Maximum likelihood (ML) orbit' in v1[i+2]:
-                        s0=v1[i+1]
-                        s1=v1[i+3]
-                        break
-                ep0 = np.float64(s0.split()[7])-2400000.5
-                n1=np.array([s1.split()[4:]],dtype=np.float64)
-                # add _configureOrbits call here
-                orb2 = self._configureOrbits(n1,[ep0],'keplerian','TT',None,None)
-                conv1=oo.pyoorb.oorb_element_transformation(in_orbits=orb2,in_element_type=2)
-                h2='!!OID FORMAT q e i Omega argperi t_p H t_0 INDEX N_PAR MOID COMPCODE'
-                st2a=[uid,
-                    ' COM',
-                    f" {conv1[0][0][1]:0.12f} ",
-                    f"{conv1[0][0][2]:0.12f} ",
-                    f"{conv1[0][0][3]/rad:0.12f} ",
-                    f"{conv1[0][0][4]/rad:0.12f} ",
-                    f"{conv1[0][0][5]/rad:0.12f} ",
-                    f"{conv1[0][0][6]:0.12f} ",
-                    f"{conv1[0][0][10]:0.12f} ",
-                    f"{conv1[0][0][8]:0.12f}",
-                    " 1 6 -1 HORIZONS"]
-                st2=''.join(st2a)
+                                '--conf='+os.path.join(self.config_path,'oorb.conf'),
+                                '--task=ranging',
+                                '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb1.des'),
+                                '--separately'
+                            ]
+                subprocess.run(call,cwd=temp_dir_i,capture_output=True,timeout=90)
+                fs=glob.glob(os.path.join(temp_dir_i,'*.sor'))
                 with open(os.path.join(temp_dir_i,orbit_id_i+'_orb_in.des'),'w') as f:
-                    f.write(h2+'\n')
-                    f.write(st2)
-                    f.close()
+                    for fn in fs:
+                        v1=open(fn).read().split('\n')
+                        for i in range(len(v1)):
+                            if 'ORBITAL-ELEMENT PDF' in v1[i] and 'Maximum likelihood (ML) orbit' in v1[i+2]:
+                                s0=v1[i+1]
+                                s1=v1[i+3]
+                                break
+                        ep0 = np.float64(s0.split()[7])-2400000.5
+                        n1=np.array([s1.split()[4:]],dtype=np.float64)
+                        # add _configureOrbits call here
+                        orb2 = self._configureOrbits(n1,[ep0],'keplerian','TT',None,None)
+                        conv1=oo.pyoorb.oorb_element_transformation(in_orbits=orb2,in_element_type=2)
+                        h2='!!OID FORMAT q e i Omega argperi t_p H t_0 INDEX N_PAR MOID COMPCODE'
+                        st2a=['0',
+                            ' COM',
+                            f" {conv1[0][0][1]:0.12f} ",
+                            f"{conv1[0][0][2]:0.12f} ",
+                            f"{conv1[0][0][3]/rad:0.12f} ",
+                            f"{conv1[0][0][4]/rad:0.12f} ",
+                            f"{conv1[0][0][5]/rad:0.12f} ",
+                            f"{conv1[0][0][6]:0.12f} ",
+                            f"{conv1[0][0][10]:0.12f} ",
+                            f"{conv1[0][0][8]:0.12f}",
+                            " 1 6 -1 HORIZONS\n"]
+                        f.write(''.join(st2a))
                 call = ['oorb',
-                    '--conf=/mnt/c/Users/berre/Desktop/CODE/Python/b612/cosmo/orb_it/data/oorbN.conf',
-                    '--task=lsl',
-                    '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb.des'),
-                    '--orb-in='+os.path.join(temp_dir_i,orbit_id_i+'_orb_in.des'),
-                    '--orb-out='+os.path.join(temp_dir_i,orbit_id_i+'_lsl_out.txt')
-                ]
+                                '--conf='+os.path.join(self.config_path,'oorbN.conf'),
+                                '--task=lsl',
+                                '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb2.des'),
+                                '--orb-in='+os.path.join(temp_dir_i,orbit_id_i+'_orb_in.des'),
+                                '--orb-out='+os.path.join(temp_dir_i,orbit_id_i+'_lsl_out.txt')
+                            ]
                 subprocess.run(call,cwd=temp_dir_i,timeout=90,capture_output=True)
                 
                 OD_COLUMNS=[
@@ -652,19 +667,3 @@ class PYOORB(Backend):
                 od_res.append(data)
         od_orbits = pd.concat(od_res, ignore_index=True)
         return od_orbits
-
-    def tryCall(self,call,cwd,uid,tries=0,stop=5):
-        try:
-            subprocess.run(call,cwd=cwd,timeout=45,capture_output=True)
-            # CHECK THIS WHEN FINISHED
-            open(os.path.join(cwd,uid+'.sor')).read().split('\n')
-            return
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt
-        except:
-            if tries >= stop:
-                raise subprocess.SubprocessError('Ranging has failed, all attempts have been used')
-            else:
-                print(f'WARNING: Ranging has failed, {tries+1} out of {stop} attempts until stop')
-                tries+=1
-                return self.tryCall(call,cwd,uid,tries)
