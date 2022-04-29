@@ -14,7 +14,7 @@ from ..utils import ADES
 aobj=ADES(None,None,None,None,None)
 
 FINDORB_CONFIG = {
-    "config_file" : os.path.join(os.path.dirname(__file__), "data", "environ.dat"),
+    "config_file" : os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "environ.dat"),
 }
 ADES_KWARGS = {
     "mjd_scale" : "utc",
@@ -142,7 +142,7 @@ class FINDORB(Backend):
         env["HOME"] = temp_dir
         return env
 
-    def _propagateOrbits(self, orbits, t1, out_dir=None):
+    def _propagateOrbits(self, orbits, t1, full_output=False, out_dir=None):
         """
         Propagate orbits to t1.
 
@@ -298,10 +298,12 @@ class FINDORB(Backend):
 
             if orbits.ids is not None:
                 propagated["orbit_id"] = orbits.ids[propagated["orbit_id"].values]
+        if full_output:
+            return propagated, process_returns
+        else:
+            return propagated
 
-        return propagated, process_returns
-
-    def _generateEphemeris(self, orbits, observers, out_dir=None):
+    def _generateEphemeris(self, orbits, observers, full_output=False, out_dir=None):
         """
         Generate ephemerides for each orbit and observer.
 
@@ -508,10 +510,13 @@ class FINDORB(Backend):
         # If orbits have their IDs defined replace the orbit IDs
         if orbits.ids is not None:
             ephemeris["orbit_id"] = orbits.ids[ephemeris["orbit_id"].values]
+        
+        if full_output:
+            return ephemeris, process_returns
+        else:
+            return ephemeris
 
-        return ephemeris, process_returns
-
-    def _orbitDetermination(self, observations, out_dir=None, ades_kwargs=ADES_KWARGS):
+    def _orbitDetermination(self, observations,  full_output=False, out_dir=None, ades_kwargs=ADES_KWARGS):
         ids = []
         epochs = []
         orbits = []
@@ -741,5 +746,7 @@ class FINDORB(Backend):
             "covariance"
         ]]
         od_orbit_members = pd.concat(residual_dfs, ignore_index=True)
-
-        return od_orbits, od_orbit_members, process_returns
+        if full_output:
+            return od_orbits, od_orbit_members, process_returns
+        else:
+            return od_orbits

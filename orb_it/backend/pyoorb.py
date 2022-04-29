@@ -655,10 +655,12 @@ class PYOORB(Backend):
 
     def tryCall(self,call,cwd,uid,tries=0,stop=5):
         try:
-            subprocess.run(call,cwd=cwd,timeout=90,capture_output=False)
+            subprocess.run(call,cwd=cwd,timeout=45,capture_output=True)
             # CHECK THIS WHEN FINISHED
             open(os.path.join(cwd,uid+'.sor')).read().split('\n')
             return
+        except KeyboardInterrupt:
+            raise KeyboardInterrupt
         except:
             if tries >= stop:
                 raise subprocess.SubprocessError('Ranging has failed, all attempts have been used')
