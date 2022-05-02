@@ -114,7 +114,7 @@ def loadOrb(data):
     
     Returns
     -------
-    orbits : orbit object `~validate_findorb.raiden.Orbits`
+    orbits : orbit object `~orb_it.raiden.Orbits`
     '''
     return Orbits(data)
 
@@ -131,7 +131,7 @@ def getOrbHorizons(target, t0):
 
     Returns
     -------
-    orbits: orbit object `~validate_findorb.raiden.Orbits`
+    orbits: orbit object `~orb_it.raiden.Orbits`
     '''
     
     if type(target) == str:

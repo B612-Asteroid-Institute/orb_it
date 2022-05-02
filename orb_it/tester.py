@@ -8,6 +8,37 @@ from astroquery.jplhorizons import Horizons
 from shutil import copy
 from .raiden import Orbits
 
+def error_state(orbit, observatory_code, backend, astrometric_error, full_output,ephemeris=None):
+    result = pd.DataFrame()
+#     result["num_obs_fit"] = residuals["incl"].sum().astype(int)
+    result['epoch [mjd]'] = [np.nan]
+    result.insert(0,'orbit_id',orbit.ids[0])
+    result.insert(1,'integrator',backend.name)
+    result["delta epoch [mjd]"] = [np.nan]
+    result["delta r [km]"] = [np.nan]
+    result["delta v [m/s]"] = [np.nan]
+    result["delta x [km]"] = [np.nan]
+    result["delta y [km]"] = [np.nan]
+    result["delta z [km]"] = [np.nan]
+    result["delta vx [m/s]"] = [np.nan]
+    result["delta vy [m/s]"] = [np.nan]
+    result["delta vz [m/s]"] = [np.nan]
+    if full_output:
+        result["rms delta ra [arcsec]"] = [np.nan]
+        result["rms delta dec [arcsec]"] = [np.nan]
+        result["rms delta time [seconds]"] =[np.nan]
+    
+        result["covariance"] = [np.nan]
+    
+    
+    result.insert(2, "observatory_code",  observatory_code)
+    result.insert(3, "arc_length [days]", np.nan)
+    result.insert(6, "astrometric_error [mas]", astrometric_error)
+    if ephemeris is not None:
+        result.insert(4, "num_obs", len(ephemeris))
+    else:
+        result.insert(4, "num_obs", np.nan)
+    return result
 
 def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_output=False,out=None):
     t0 = orbit.epochs[0]
@@ -27,11 +58,15 @@ def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_
     MAS_TO_DEG = 2.777777777777778e-07
     DEG_TO_MAS = 1/MAS_TO_DEG
     obs = {observatory_code:observation_times}
-    
-    if full_output:
-        ephemeris,ret1= backend._generateEphemeris(orbits=orbit,observers =obs, out_dir=outd,full_output=full_output)
-    else:
-        ephemeris= backend._generateEphemeris(orbits=orbit,observers =obs)
+    try:
+        if full_output:
+            ephemeris,ret1= backend._generateEphemeris(orbits=orbit,observers =obs, out_dir=outd,full_output=full_output)
+        else:
+            ephemeris= backend._generateEphemeris(orbits=orbit,observers =obs)
+    except:
+        # Make logger
+        print(f"Error in {backend.name} _generateEphemeris")
+        return error_state(orbit, observatory_code, backend, astrometric_error, full_output)
 
     ephemeris["RA_sigma_deg"] = astrometric_error*MAS_TO_DEG
     ephemeris["Dec_sigma_deg"] = astrometric_error*MAS_TO_DEG
@@ -44,18 +79,27 @@ def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_
     # Add a simple astrometric errors to both RA and Dec
     ephemeris.loc[:, "RA_deg"] += np.random.normal(loc=0, scale=astrometric_error*MAS_TO_DEG, size=len(ephemeris)) / np.cos(np.radians(ephemeris['Dec_deg'].values))
     ephemeris.loc[:, "Dec_deg"] += np.random.normal(loc=0, scale=astrometric_error*MAS_TO_DEG, size=len(ephemeris))
+    try:
+        if full_output:
+            od_orbit_df, residuals,ret2 = backend._orbitDetermination(ephemeris, out_dir=outd,full_output=full_output)
+        else:
+            od_orbit_df = backend._orbitDetermination(ephemeris)
+    
+        od_orbit = Orbits(od_orbit_df)
+    except:
+        # Make logger
+        print(f"Error in {backend.name} _orbitDetermination")
+        return error_state(orbit, observatory_code, backend, astrometric_error, full_output, ephemeris)
 
-    if full_output:
-        od_orbit_df, residuals,ret2 = backend._orbitDetermination(ephemeris, out_dir=outd,full_output=full_output)
-    else:
-        od_orbit_df = backend._orbitDetermination(ephemeris)
- 
-    od_orbit = Orbits(od_orbit_df)
-
-    if full_output:
-        prop_orbit,ret3 = backend._propagateOrbits(orbit, observation_times[-1:], out_dir=outd,full_output=full_output)
-    else:
-        prop_orbit = backend._propagateOrbits(orbit, od_orbit.epochs)
+    try:
+        if full_output:
+            prop_orbit,ret3 = backend._propagateOrbits(orbit, observation_times[-1:], out_dir=outd,full_output=full_output)
+        else:
+            prop_orbit = backend._propagateOrbits(orbit, od_orbit.epochs)
+    except:
+        # Make logger
+        print(f"Error in {backend.name} _propagateOrbits")
+        return error_state(orbit, observatory_code, backend, astrometric_error, full_output, ephemeris)
 
     delta_state = od_orbit_df[["x", "y", "z", "vx", "vy", "vz"]].values - prop_orbit[["x", "y", "z", "vx", "vy", "vz"]].values
     
