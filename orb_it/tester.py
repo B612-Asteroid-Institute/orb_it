@@ -1,4 +1,5 @@
 import os
+import logging
 import numpy as np
 import pandas as pd
 import astropy
@@ -7,6 +8,8 @@ from astropy import units as u
 from astroquery.jplhorizons import Horizons
 from shutil import copy
 from .raiden import Orbits
+
+logging.basicConfig(handlers=[logging.FileHandler('testing.log'),logging.StreamHandler()],level=logging.INFO,format='%(asctime)s, %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 def error_state(orbit, observatory_code, backend, astrometric_error, full_output,ephemeris=None):
     result = pd.DataFrame()
@@ -64,8 +67,8 @@ def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_
         else:
             ephemeris= backend._generateEphemeris(orbits=orbit,observers =obs)
     except:
-        # Make logger
-        print(f"Error in {backend.name} _generateEphemeris")
+        logging.error(f"{orbit.ids[0]} failed to run _generateEphemeris using {backend.name}")
+        #print(f"Error in {backend.name} _generateEphemeris")
         return error_state(orbit, observatory_code, backend, astrometric_error, full_output)
 
     ephemeris["RA_sigma_deg"] = astrometric_error*MAS_TO_DEG
@@ -87,8 +90,8 @@ def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_
     
         od_orbit = Orbits(od_orbit_df)
     except:
-        # Make logger
-        print(f"Error in {backend.name} _orbitDetermination")
+        logging.error(f"{orbit.ids[0]} failed to run _orbitDetermination using {backend.name}")
+        #print(f"Error in {backend.name} _orbitDetermination")
         return error_state(orbit, observatory_code, backend, astrometric_error, full_output, ephemeris)
 
     try:
@@ -97,8 +100,8 @@ def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_
         else:
             prop_orbit = backend._propagateOrbits(orbit, od_orbit.epochs)
     except:
-        # Make logger
-        print(f"Error in {backend.name} _propagateOrbits")
+        logging.error(f"{orbit.ids[0]} failed to run _propagateOrbits using {backend.name}")
+        #print(f"Error in {backend.name} _propagateOrbits")
         return error_state(orbit, observatory_code, backend, astrometric_error, full_output, ephemeris)
 
     delta_state = od_orbit_df[["x", "y", "z", "vx", "vy", "vz"]].values - prop_orbit[["x", "y", "z", "vx", "vy", "vz"]].values

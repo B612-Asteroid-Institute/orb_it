@@ -1,4 +1,5 @@
 import os
+import logging
 import warnings
 import numpy as np
 import pyoorb as oo
@@ -46,6 +47,8 @@ class PYOORB(Backend):
 
         super().__init__(name="OpenOrb", **kwargs)
 
+        self.logger = logging.getLogger(__name__)
+
         self.setup()
         return
 
@@ -54,7 +57,7 @@ class PYOORB(Backend):
         Initialize PYOORB with the designated JPL ephemeris file.
 
         """
-        env_var = f"THOR_PYOORB"
+        env_var = f"ORB_IT_PYOORB"
         if env_var in os.environ.keys() and os.environ[env_var] == "True":
             pass
         else:
@@ -711,9 +714,11 @@ class PYOORB(Backend):
                         data['orbit_id'] = orbit_id
                         data.insert(1,'mjd_tdb',Time(data['epoch_tt_mjd'],format='mjd',scale='tt').tdb.mjd)
                     except:
+                        self.logger.error(f'OPEN ORB: {orbit_id}, OD failed using multi_ranging')
                         data=pd.DataFrame([np.full_like(OD_COLUMNS,np.nan)],columns=OD_COLUMNS)
                         data['orbit_id'] = orbit_id
                 else:
+                    self.logger.error(f'OPEN ORB: {orbit_id}, OD failed using ranging')
                     data=pd.DataFrame([np.full_like(OD_COLUMNS,np.nan)],columns=OD_COLUMNS)
                     data['orbit_id'] = orbit_id
                 od_res.append(data)
@@ -730,9 +735,9 @@ class PYOORB(Backend):
             raise KeyboardInterrupt
         except:
             if tries >= stop:
-                print('Ranging has failed, all attempts have been used')
+                self.logger.error('OPEN ORB: Ranging has failed, all attempts have been used')
                 return False
             else:
-                print(f'WARNING: Ranging has failed, {tries+1} out of {stop} attempts until stop')
+                self.logger.warning(f'OPEN ORB: Ranging has failed, {tries+1} out of {stop} attempts until stop')
                 tries+=1
                 return self.tryCall(call,cwd,uid,tries)
