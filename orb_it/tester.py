@@ -176,7 +176,7 @@ def runTest(orbits, observatory_code, dts, backend, astrometric_error=None, full
     
     Returns
     -------
-    result : pandas.DataFrame
+    result : `~pandas.DataFrame`
         DataFrame with the results of the test.
         Has the following columns:
         orbit_id : str

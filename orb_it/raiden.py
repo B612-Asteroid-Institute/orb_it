@@ -94,7 +94,7 @@ def loadOrb(data):
 
     Parameters
     ----------
-    data: str or pandas.DataFrame
+    data: str or `~pandas.DataFrame`
         Path to the .csv file or pandas DataFrame containing the orbit data.
         Must have the following columns:
         x: float
@@ -126,7 +126,7 @@ def getOrbHorizons(target, t0):
     ----------
     target : str or list of str
         Name(s) of the target to get the orbital state vector for.
-    t0 : astropy.time.core.Time
+    t0 : `~astropy.time.core.Time`
         Time object with scale='tdb' format='mjd' for the time of the state vector.
 
     Returns

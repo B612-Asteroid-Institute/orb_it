@@ -141,7 +141,7 @@ class FINDORB(Backend):
 
         Parameters
         ----------
-        orbits : `~thor.orbits.orbits.Orbits`
+        orbits : `~orb_it.raiden.Orbits`
             Orbits to propagate.
         t1 : `~astropy.time.core.Time`
             Times to which to propagate each orbit.
@@ -302,7 +302,7 @@ class FINDORB(Backend):
 
         Parameters
         ----------
-        orbits : `~thor.orbits.orbits.Orbits`
+        orbits : `~orb_it.raiden.Orbits`
             Orbits to propagate.
         observers : dict or `~pandas.DataFrame`
             A dictionary with observatory codes as keys and observation_times (`~astropy.time.core.Time`) as values.
@@ -510,6 +510,28 @@ class FINDORB(Backend):
             return ephemeris
 
     def _orbitDetermination(self, observations,  full_output=False, out_dir=None, ades_kwargs=ADES_KWARGS):
+        """
+        Determine orbits from a set of observations.
+
+        Parameters
+        ----------
+        observations : `~pandas.DataFrame`
+            DataFrame containing the observational data.
+        full_output : `bool`, optional
+            If True, return the ephemeris and the process return codes and residuals.
+        out_dir : `str`, optional
+            Path to the output directory.
+        
+        Returns
+        -------
+        od_orbits : `~pandas.DataFrame`
+            DataFrame containing the orbital data.
+        If full_output is True,
+        od_orbit_members : `~pandas.DataFrame`
+            DataFrame containing the residuals.
+        process_returns : `list`
+            List of return statements from subprocess.run() calls.
+        """
         ids = []
         epochs = []
         orbits = []

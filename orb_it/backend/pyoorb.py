@@ -233,45 +233,10 @@ class PYOORB(Backend):
 
         Parameters
         ----------
-        orbits : `~numpy.ndarray` (N, 6)
+        orbits : `~orb_it.raiden.Orbits`
             Orbits to propagate. See orbit_type for expected input format.
-        t0 : `~numpy.ndarray` (N)
-            Epoch in MJD at which the orbits are defined.
-        t1 : `~numpy.ndarray` (N)
+        t1 : `~astropy.time.core.Time`
             Epoch in MJD to which to propagate the orbits.
-        orbit_type : {'cartesian', 'keplerian', 'cometary'}, optional
-            Heliocentric ecliptic J2000 orbital element representation of the provided orbits
-            If 'cartesian':
-                x : x-position [AU]
-                y : y-position [AU]
-                z : z-position [AU]
-                vx : x-velocity [AU per day]
-                vy : y-velocity [AU per day]
-                vz : z-velocity [AU per day]
-            If 'keplerian':
-                a : semi-major axis [AU]
-                e : eccentricity [degrees]
-                i : inclination [degrees]
-                Omega : longitude of the ascending node [degrees]
-                omega : argument of periapsis [degrees]
-                M0 : mean anomaly [degrees]
-            If 'cometary':
-                p : perihelion distance [AU]
-                e : eccentricity [degrees]
-                i : inclination [degrees]
-                Omega : longitude of the ascending node [degrees]
-                omega : argument of periapsis [degrees]
-                T0 : time of perihelion passage [degrees]
-        time_scale : {'UTC', 'UT1', 'TT', 'TAI'}, optional
-            Time scale of the MJD epochs.
-        magnitude : float or `~numpy.ndarray` (N), optional
-            Absolute H-magnitude or M1 magnitude.
-        slope : float or `~numpy.ndarray` (N), optional
-            Photometric slope parameter G or K1.
-        dynamical_model : {'N', '2'}, optional
-            Propagate using N or 2-body dynamics.
-        ephemeris_file : str, optional
-            Which JPL ephemeris file to use with PYOORB.
 
         Returns
         -------
@@ -368,47 +333,14 @@ class PYOORB(Backend):
 
         Parameters
         ----------
-        orbits : `~numpy.ndarray` (N, 6)
+        orbits : `~orb_it.raiden.Orbits`
             Orbits to propagate. See orbit_type for expected input format.
-        t0 : `~numpy.ndarray` (N)
-            Epoch in MJD at which the orbits are defined.
-        t1 : `~numpy.ndarray` (N)
-            Epoch in MJD to which to propagate the orbits.
-        orbit_type : {'cartesian', 'keplerian', 'cometary'}, optional
-            Heliocentric ecliptic J2000 orbital element representation of the provided orbits
-            If 'cartesian':
-                x : x-position [AU]
-                y : y-position [AU]
-                z : z-position [AU]
-                vx : x-velocity [AU per day]
-                vy : y-velocity [AU per day]
-                vz : z-velocity [AU per day]
-            If 'keplerian':
-                a : semi-major axis [AU]
-                e : eccentricity [degrees]
-                i : inclination [degrees]
-                Omega : longitude of the ascending node [degrees]
-                omega : argument of periapsis [degrees]
-                M0 : mean anomaly [degrees]
-            If 'cometary':
-                p : perihelion distance [AU]
-                e : eccentricity [degrees]
-                i : inclination [degrees]
-                Omega : longitude of the ascending node [degrees]
-                omega : argument of periapsis [degrees]
-                T0 : time of perihelion passage [degrees]
-        time_scale : {'UTC', 'UT1', 'TT', 'TAI'}, optional
-            Time scale of the MJD epochs.
-        magnitude : float or `~numpy.ndarray` (N), optional
-            Absolute H-magnitude or M1 magnitude.
-        slope : float or `~numpy.ndarray` (N), optional
-            Photometric slope parameter G or K1.
-        observatory_code : str, optional
-            Observatory code for which to generate topocentric ephemeris.
-        dynamical_model : {'N', '2'}, optional
-            Propagate using N or 2-body dynamics.
-        ephemeris_file : str, optional
-            Which JPL ephemeris file to use with PYOORB.
+        observers : dict
+            A dictionary with observatory codes as keys and observation_times (`~astropy.time.core.Time`) as values.
+
+        Returns
+        -------
+        ephemeris : `~pandas.DataFrame`
         """
         # Convert orbits into PYOORB format
         orbits_pyoorb = self._configureOrbits(
@@ -500,6 +432,20 @@ class PYOORB(Backend):
         return ephemeris
 
     def _orbitDetermination(self,observations,out_dir=None):
+        """
+        Determine orbits from observations using OpenOrb's `--task=ranging` and `--task=lsl` functions from the terminal.
+
+        Parameters
+        ----------
+        observations : `~pandas.DataFrame`
+            Data frame of observations including RA's Dec's, epochs, and observatory codes.
+        out_dir : str, optional
+            Save input and output files to this directory.
+        
+        Returns
+        -------
+        od_orbits : `~pandas.DataFrame`
+        """
         od_res = []
         _observations = observations.copy()
         # _observations.rename(
