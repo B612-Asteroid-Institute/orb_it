@@ -9,6 +9,7 @@ import subprocess
 import uuid
 import tempfile
 import glob
+from .backend import Backend
 
 rad = np.pi / 180.0
 
@@ -21,14 +22,7 @@ PYOORB_CONFIG = {
     "config_path": os.path.join(os.path.dirname(os.path.dirname(__file__)), "data"),
     "multi_ranging": True
 }
-# Fake backend class
-class Backend:
 
-    def __init__(self, name="Backend", **kwargs):
-        self.__dict__.update(kwargs)
-        self.name = name
-        self.is_setup = False
-        return
 class PYOORB(Backend):
 
     def __init__(self, **kwargs):

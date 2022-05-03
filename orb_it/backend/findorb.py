@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 from astropy.time import Time
 
-#from ..utils import writeToADES
-#from .backend import Backend
+
+from .backend import Backend
 from ..utils import ADES
 aobj=ADES(None,None,None,None,None)
 
@@ -39,14 +39,7 @@ ADES_KWARGS = {
     "telescope_fratio" : None,
     "comment" : None
 }
-# Fake backend class
-class Backend:
 
-    def __init__(self, name="Backend", **kwargs):
-        self.__dict__.update(kwargs)
-        self.name = name
-        self.is_setup = False
-        return
 class FINDORB(Backend):
 
     def __init__(self, **kwargs):
