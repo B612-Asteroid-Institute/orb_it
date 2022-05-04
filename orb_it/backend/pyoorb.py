@@ -509,6 +509,7 @@ class PYOORB(Backend):
                 # Going to add this in when i figure out magnitude values
                 magfil= '23.7000000000 r'
                 if self.multi_ranging:
+                    b1=True
                     ind=np.arange(len(times))
                     ind1=np.array_split(ind,np.floor(len(times)/4))
                     z=0
