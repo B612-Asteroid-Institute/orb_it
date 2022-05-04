@@ -15,4 +15,6 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
-version.py 
+version.py
+*.log
+.ipynb_checkpoints
