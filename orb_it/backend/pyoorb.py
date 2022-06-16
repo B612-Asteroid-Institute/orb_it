@@ -20,7 +20,7 @@ PYOORB_CONFIG = {
     "dynamical_model" : "N",
     "ephemeris_file" : "de430.dat",
     "config_path": os.path.join(os.path.dirname(os.path.dirname(__file__)), "data"),
-    "multi_ranging": True
+    "multi_ranging": 1
 }
 
 class PYOORB(Backend):
@@ -508,7 +508,8 @@ class PYOORB(Backend):
                 # APPMAG FILTER
                 # Going to add this in when i figure out magnitude values
                 magfil= '23.7000000000 r'
-                if self.multi_ranging:
+                if self.multi_ranging==1:
+                    # regular multi-ranging, splits up observations in to groups of 3-4 then fits them all
                     b1=True
                     ind=np.arange(len(times))
                     ind1=np.array_split(ind,np.floor(len(times)/4))
@@ -563,8 +564,62 @@ class PYOORB(Backend):
                                 f"{conv1[0][0][8]:0.12f}",
                                 " 1 6 -1 HORIZONS\n"]
                             f.write(''.join(st2a))
-
-                else:
+                elif self.multi_ranging == 2:
+                    # orbfit style, takes the first, middle, and last observation to fit one prelim orbit
+                    b1=True
+                    ind=np.arange(len(times))
+                    ind1=np.array_split(ind,np.floor(len(times)/4))
+                    z=0
+                    k=0
+                    val1 = []
+                    dir1=os.path.join(temp_dir_i,orbit_id_i+'_genorb1.des')
+                    with open(dir1,mode='w') as f:
+                        f.write(f'{0}'+' '+f"{times[0]:0.10f}"+' O '+f"{ras[0]:0.10f}  {decs[0]:0.10f}"+'  '+magfil+'  '+obscode[0]+'   '+res+'\n')
+                        mid = np.int64(np.ceil(len(times)/2))
+                        f.write(f'{0}'+' '+f"{times[mid]:0.10f}"+' O '+f"{ras[mid]:0.10f}  {decs[mid]:0.10f}"+'  '+magfil+'  '+obscode[mid]+'   '+res+'\n')
+                        f.write(f'{0}'+' '+f"{times[-1]:0.10f}"+' O '+f"{ras[-1]:0.10f}  {decs[-1]:0.10f}"+'  '+magfil+'  '+obscode[-1]+'   '+res+'\n')
+                        f.close()
+                    dir1=os.path.join(temp_dir_i,orbit_id_i+'_genorb.des')
+                    with open(dir1,mode='w') as f:
+                        for j in range(len(times)):
+                            f.write(f'{0}'+' '+f"{times[j]:0.10f}"+' O '+f"{ras[j]:0.10f}  {decs[j]:0.10f}"+'  '+magfil+'  '+obscode[j]+'   '+res+'\n')
+                        f.close()
+                    call = ['oorb',
+                                    '--conf='+os.path.join(self.config_path,'oorb.conf'),
+                                    '--task=ranging',
+                                    '--obs-in='+os.path.join(temp_dir_i,orbit_id_i+'_genorb1.des'),
+                                    '--separately'
+                                ]
+                    subprocess.run(call,cwd=temp_dir_i,capture_output=True,timeout=90)
+                    fs=glob.glob(os.path.join(temp_dir_i,'*.sor'))
+                    with open(os.path.join(temp_dir_i,orbit_id_i+'_orb_in.des'),'w') as f:
+                        for fn in fs:
+                            v1=open(fn).read().split('\n')
+                            for i in range(len(v1)):
+                                if 'ORBITAL-ELEMENT PDF' in v1[i] and 'Maximum likelihood (ML) orbit' in v1[i+2]:
+                                    s0=v1[i+1]
+                                    s1=v1[i+3]
+                                    break
+                            ep0 = np.float64(s0.split()[7])-2400000.5
+                            n1=np.array([s1.split()[4:]],dtype=np.float64)
+                            # add _configureOrbits call here
+                            orb2 = self._configureOrbits(n1,[ep0],'keplerian','TT',None,None)
+                            conv1=oo.pyoorb.oorb_element_transformation(in_orbits=orb2,in_element_type=2)
+                            h2='!!OID FORMAT q e i Omega argperi t_p H t_0 INDEX N_PAR MOID COMPCODE'
+                            st2a=['0',
+                                ' COM',
+                                f" {conv1[0][0][1]:0.12f} ",
+                                f"{conv1[0][0][2]:0.12f} ",
+                                f"{conv1[0][0][3]/rad:0.12f} ",
+                                f"{conv1[0][0][4]/rad:0.12f} ",
+                                f"{conv1[0][0][5]/rad:0.12f} ",
+                                f"{conv1[0][0][6]:0.12f} ",
+                                f"{conv1[0][0][10]:0.12f} ",
+                                f"{conv1[0][0][8]:0.12f}",
+                                " 1 6 -1 HORIZONS\n"]
+                            f.write(''.join(st2a))
+                elif self.multi_ranging == 0:
+                    # no multi-ranging, feeds all observations to initial fitter
                     dir1=os.path.join(temp_dir_i,orbit_id_i+'_genorb.des')
                     with open(dir1,mode='w') as f:
                         for j in range(len(times)):
