@@ -10,6 +10,7 @@ import uuid
 import tempfile
 import glob
 from .backend import Backend
+import shutil
 
 rad = np.pi / 180.0
 
@@ -227,7 +228,7 @@ class PYOORB(Backend):
         epochs_pyoorb = np.array(list(np.vstack([epochs, time_scale]).T), dtype=np.double, order='F')
         return epochs_pyoorb
 
-    def _propagateOrbits(self, orbits, t1):
+    def _propagateOrbits(self, orbits, t1, out_dir=None):
         """
         Propagate orbits using PYOORB.
 
@@ -325,9 +326,13 @@ class PYOORB(Backend):
         if orbits.ids is not None:
             propagated["orbit_id"] = orbits.ids[propagated["orbit_id"].values]
 
+        if out_dir is not None:
+            os.makedirs(os.path.join(out_dir,'propagation'),exist_ok=True)
+            propagated.to_csv(os.path.join(out_dir,'propagation','propagated.csv'),index=False)
+
         return propagated
 
-    def _generateEphemeris(self, orbits, observers):
+    def _generateEphemeris(self, orbits, observers, out_dir=None):
         """
         Generate ephemeris using PYOORB.
 
@@ -428,6 +433,10 @@ class PYOORB(Backend):
 
         if orbits.ids is not None:
             ephemeris["orbit_id"] = orbits.ids[ephemeris["orbit_id"].values]
+
+        if out_dir is not None:
+            os.makedirs(os.path.join(out_dir,'ephemeris'),exist_ok=True)
+            ephemeris.to_csv(os.path.join(out_dir,'ephemeris','ephemerides.csv'),index=False)
 
         return ephemeris
 
@@ -718,6 +727,37 @@ class PYOORB(Backend):
                     data=pd.DataFrame([np.full_like(OD_COLUMNS,np.nan)],columns=OD_COLUMNS)
                     data['orbit_id'] = orbit_id
                 od_res.append(data)
+
+                if out_dir is not None and b1:
+                    chkf=os.path.join('mrw.txt')
+                    if os.path.exists(chkf):
+                        vf= open(chkf).read().split('\n')
+                        if vf[1] == 'y':
+                            shutil.copytree(
+                                temp_dir_i,
+                                os.path.join(out_dir,'orbit_determination'),
+                                dirs_exist_ok=True
+                            )
+                    else:
+                        chk = input('Multi Range can generate a lot of files, do you want to write all to out_dir (y or n)?\n'+
+                        'You will only be asked once, after this a multi_range waiver (mrw.txt) will be generated in your current directory.\n'+
+                        'To be asked this prompt again, delete mrw.txt or move to another directory.\n')
+                        with open('mrw.txt','w')as fw:
+                            fw.write('Multi Range can generate a lot of files, do you want to write all to out_dir (y or n)?\n'+chk)
+                            fw.close()
+                        if chk =='y':
+                            shutil.copytree(
+                            temp_dir_i,
+                            os.path.join(out_dir,'orbit_determination'),
+                            dirs_exist_ok=True
+                            )
+                elif out_dir is not None:
+                       shutil.copytree(
+                                temp_dir_i,
+                                os.path.join(out_dir,'orbit_determination'),
+                                dirs_exist_ok=True
+                            )        
+
         od_orbits = pd.concat(od_res, ignore_index=True)
         return od_orbits
 

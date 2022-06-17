@@ -6,12 +6,13 @@ import os
 from astropy.coordinates import Angle
 import astropy.units as u
 import subprocess
+import shutil
 
 from .backend import Backend
 from ..utils.ic_utils import *
 
 # As of right now, orbfit_path should only lead to HOME/orbfit.
-ORBFIT_CONFIG = {'orbfit_path': os.path.join(os.environ["HOME"],'orbfit/'),
+ORBFIT_CONFIG = {'orbfit_path': os.path.join(os.environ["HOME"],'orbfit'),
                  'arc_limit': 31
 }
 
@@ -36,7 +37,8 @@ class ORBFIT(Backend):
 
     def setup(self):
         if not os.path.exists(self.orbfit_path):
-            FileNotFoundError(f'orbfit not found in {self.orbfit_path}')
+            FileNotFoundError(f'orbfit not found in {self.orbfit_path}\n'+
+            'either copy/move your orbfit installation to this directory or specify its location with the kwarg "orbfit_path"')
         # Add extra copying things for the AST files and the jpleph file
         
         return
@@ -71,10 +73,10 @@ class ORBFIT(Backend):
                 step = observation_times[1].mjd - observation_times[0].mjd
                 with tf.TemporaryDirectory() as tdir:
                     eq1file(orbits[i], tdir=tdir)
-                    fopfile(tdir=tdir,obsc=observatory_code)
+                    fopfile(tdir=tdir,ofd=self.orbfit_path,obsc=observatory_code)
                     ephHelp(start, stop, step, observatory_code, tdir=tdir)
-                    home = os.environ["HOME"]
-                    subprocess.call(f'{home}/orbfit/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL) 
+                    #home = os.environ["HOME"]
+                    subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL) 
                     f1 = open(f'{tdir}/temp.eph').read().split('\n')
                     for i in range(len(f1)):
                         if '=' in f1[i]:
@@ -85,6 +87,16 @@ class ORBFIT(Backend):
                         if "." in d1[i]:
                             a1.append(d1[i].split())
                     df = pd.DataFrame(a1)
+                    if out_dir is not None:
+                        shutil.copytree(
+                        tdir,
+                        os.path.join(out_dir,'ephemeris'),
+                        ignore=shutil.ignore_patterns(
+                        "*.bai",
+                        "*.bep"
+                        ),
+                        dirs_exist_ok=True
+                        )
                     
                 df['orbit_id'] = orbit_id_i
                 df['mjd_utc'] = df[4].astype(float)
@@ -123,12 +135,12 @@ class ORBFIT(Backend):
             for i in range(orbits.num_orbits):
                 orbit_id_i = orbits.ids[i]
                 eq1file(orbits[i], tdir=tdir)
-                fopfile(tdir=tdir)
+                fopfile(tdir=tdir,ofd=self.orbfit_path)
                 propHelp(stop[0], tdir=tdir)
         
-                home = os.environ["HOME"]
+                #home = os.environ["HOME"]
         
-                call = [f'{home}/orbfit/src/fitobs/fitobs.x', '<', 'ast.inp']
+                call = [f'{self.orbfit_path}/src/fitobs/fitobs.x', '<', 'ast.inp']
                 ca=' '.join(call)
                 with open(os.path.join(tdir,'temp_prop.txt'),'w') as fi:
                     subprocess.call(ca,shell=True,cwd=tdir,stderr=fi,stdout=subprocess.DEVNULL)
@@ -152,7 +164,17 @@ class ORBFIT(Backend):
                 p_df['vy'] = [prop[4]]
                 p_df['vz'] = [prop[5]]
                 prop_dfs.append(p_df)
-            dfs = pd.concat(prop_dfs, ignore_index=True)   
+            dfs = pd.concat(prop_dfs, ignore_index=True)
+            if out_dir is not None:
+                        shutil.copytree(
+                        tdir,
+                        os.path.join(out_dir,'propagation'),
+                        ignore=shutil.ignore_patterns(
+                        "*.bai",
+                        "*.bep"
+                        ),
+                        dirs_exist_ok=True
+                        )   
             return dfs
 
     def _orbitDetermination(self, observations, out_dir=None):
@@ -302,15 +324,15 @@ class ORBFIT(Backend):
                             f.write(fs)
                             i+=1
                         f.close()
-                    fopOD2(tdir=tdir)
+                    fopOD2(tdir=tdir,ofd=self.orbfit_path)
                 else:
-                    fopOD(tdir=tdir)
+                    fopOD(tdir=tdir,ofd=self.orbfit_path)
                 od1Help(tdir=tdir)
                 
-                home = os.environ["HOME"]
+                #home = os.environ["HOME"]
 
                 
-                subprocess.call(f'{home}/orbfit/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
                 shutil.copy(f'{tdir}/temp.fou','/mnt/c/Users/berre/Desktop/CODE/Python/b612/ORBFIT/LOOK')
                 v1 = open(f'{tdir}/temp.fou').read().split('\n')
                 for i in range(len(v1)):
@@ -325,11 +347,11 @@ class ORBFIT(Backend):
                 #         elem = np.array(v1[i+1].split(),dtype=np.float64)
                 #         break
                 # a1=np.append(elem,np.float64(tim))
-                fopOD(tdir=tdir)
+                fopOD(tdir=tdir,ofd=self.orbfit_path)
                 eqOD(a1,tdir)
                 od2Help(tdir)
                 with open(f'{tdir}/ls_out.txt','w') as f2:
-                    subprocess.call(f'{home}/orbfit/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=f2,stderr=subprocess.DEVNULL)
+                    subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=f2,stderr=subprocess.DEVNULL)
                     f2.close()
                 
                 v2= open(f'{tdir}/ls_out.txt').read().split('\n')
@@ -349,5 +371,16 @@ class ORBFIT(Backend):
                 odd['vy'] = vec[4]
                 odd['vz'] = vec[5]
                 od_dfs.append(odd)
+
+                if out_dir is not None:
+                        shutil.copytree(
+                        tdir,
+                        os.path.join(out_dir,'orbit_determination'),
+                        ignore=shutil.ignore_patterns(
+                        "*.bai",
+                        "*.bep"
+                        ),
+                        dirs_exist_ok=True
+                        )
         od_orbits = pd.concat(od_dfs, ignore_index=True)
         return od_orbits 

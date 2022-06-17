@@ -55,9 +55,12 @@ def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_
     if out is None:
         outd=None
     else:
-        whq1=orbit.ids[0].split(' ')
-        nam='_'.join(whq1)
-        outd=os.path.join(out,f"{nam}/{dts.max():0.0f}_{astrometric_error:0.0f}mas_{Time.now().utc.value.isoformat(timespec='seconds')}")
+        whq1='_'.join(orbit.ids[0].split(' '))
+        whq2 = whq1.split('/')
+        nam='_'.join(whq2)
+        tm=Time.now().utc.strftime('%Y%m%d_%H%M')
+        outd=os.path.join(out,f"{nam}",backend.name,f"{dts.max():0.0f}_{astrometric_error:0.0f}_{tm}")
+        #outd=os.path.join(out,f"{nam}/{dts.max():0.0f}_{astrometric_error:0.0f}mas_{Time.now().utc.value.isoformat(timespec='seconds')}")
     MAS_TO_DEG = 2.777777777777778e-07
     DEG_TO_MAS = 1/MAS_TO_DEG
     obs = {observatory_code:observation_times}
@@ -65,7 +68,7 @@ def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_
         if full_output:
             ephemeris,ret1= backend._generateEphemeris(orbits=orbit,observers =obs, out_dir=outd,full_output=full_output)
         else:
-            ephemeris= backend._generateEphemeris(orbits=orbit,observers =obs)
+            ephemeris= backend._generateEphemeris(orbits=orbit,observers =obs, out_dir=outd)
     except:
         logging.error(f"{orbit.ids[0]} failed to run _generateEphemeris using {backend.name}")
         #print(f"Error in {backend.name} _generateEphemeris")
@@ -86,7 +89,7 @@ def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_
         if full_output:
             od_orbit_df, residuals,ret2 = backend._orbitDetermination(ephemeris, out_dir=outd,full_output=full_output)
         else:
-            od_orbit_df = backend._orbitDetermination(ephemeris)
+            od_orbit_df = backend._orbitDetermination(ephemeris, out_dir=outd)
     
         od_orbit = Orbits(od_orbit_df)
     except:
@@ -98,7 +101,7 @@ def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_
         if full_output:
             prop_orbit,ret3 = backend._propagateOrbits(orbit, observation_times[-1:], out_dir=outd,full_output=full_output)
         else:
-            prop_orbit = backend._propagateOrbits(orbit, od_orbit.epochs)
+            prop_orbit = backend._propagateOrbits(orbit, od_orbit.epochs, out_dir=outd)
     except:
         logging.error(f"{orbit.ids[0]} failed to run _propagateOrbits using {backend.name}")
         #print(f"Error in {backend.name} _propagateOrbits")
