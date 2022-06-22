@@ -25,7 +25,28 @@ PYOORB_CONFIG = {
 }
 
 class PYOORB(Backend):
+    '''
+    Open Orb integrator backend for orb_it testing.
 
+    Keyword Arguments
+    -----------------
+    dynamical_model : str, optional
+        The dynamical model the integrator uses. Defaults to "N".
+    ephemeris_file : str, optional
+        Name of the ephemeris file the integrator uses. Defaults to "de430.dat".
+    config_path : str, optional
+        Defines the path to the "data" folder where OORB configuration files are.
+    multi_ranging : int, optional
+        Indicates which multi_ranging method to use for an initial Orbit Determination fit. Defaults to 1.
+        0 for no multi_ranging, all observations are given for initial fit. (Can be unstable for long arcs, more stable for short arcs)
+        1 for basic multi_ranging, observations are split up into groups of 3-4, then fit separately. (Somewhat stable for longer arcs)
+        2 for OrbFit style ranging, the first, middle, and last observations are only given to the fitter. (Somewhat stable for longer arcs)
+
+    Attributes
+    ----------
+    name : str
+        Name of the integrator.
+    '''
     def __init__(self, **kwargs):
         # Make sure only the correct kwargs
         # are passed to the constructor

@@ -41,9 +41,20 @@ ADES_KWARGS = {
 }
 
 class FINDORB(Backend):
+    '''
+    Find_Orb integrator backend for orb_it testing.
 
+    Keyword Arguments
+    -----------------
+    config_file : str, optional
+        Path to Find_Orb's configuration file.
+
+    Attributes
+    ----------
+    name : str
+        Name of the integrator.
+    '''
     def __init__(self, **kwargs):
-
         # Make sure only the correct kwargs
         # are passed to the constructor
         allowed_kwargs = FINDORB_CONFIG.keys()

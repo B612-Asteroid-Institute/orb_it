@@ -17,6 +17,22 @@ ORBFIT_CONFIG = {'orbfit_path': os.path.join(os.environ["HOME"],'orbfit'),
 }
 
 class ORBFIT(Backend):
+    '''
+    OrbFit integrator backend for orb_it testing.
+
+    Keyword Arguments
+    -----------------
+    orbfit_path : str, optional
+        Local path to the location of OrbFit install. Defaults to `$HOME`.
+    arc_limit : int, optional
+        If the number of days in an arc exceed this limit, the first months worth of observations or first 8 observations are used for the initial fit for Orbit Determination.
+        Default is 31 days.
+
+    Attributes
+    ----------
+    name : str
+        Name of the integrator.
+    '''
     def __init__(self,  **kwargs):
         allowed_kwargs = ORBFIT_CONFIG.keys()
         for k in kwargs:
