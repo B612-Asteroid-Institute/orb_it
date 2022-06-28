@@ -360,7 +360,7 @@ class PYOORB(Backend):
         Parameters
         ----------
         orbits : `~orb_it.raiden.Orbits`
-            Orbits to propagate. See orbit_type for expected input format.
+            Orbits to propagate. See for expected input format.
         observers : dict
             A dictionary with observatory codes as keys and observation_times (`~astropy.time.core.Time`) as values.
 
@@ -475,6 +475,7 @@ class PYOORB(Backend):
         Returns
         -------
         od_orbits : `~pandas.DataFrame`
+            Cartesian orbital state vectors fit from observations given.
         """
         od_res = []
         _observations = observations.copy()
