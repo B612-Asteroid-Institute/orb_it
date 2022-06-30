@@ -336,7 +336,7 @@ class ORBFIT(Backend):
                 for i in range(len(v2)):
                     if 'new elem values' in v2[i]:
                         val=v2[i+1]
-                shutil.copy(f'{tdir}/ls_out.txt','/mnt/c/Users/berre/Desktop/CODE/Python/b612/ORBFIT/LOOK')
+                
                 vec = np.array(val.split(),dtype=np.float64)
                 odd = pd.DataFrame()
                 odd['orbit_id'] = [orbit_id_i]
