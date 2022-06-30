@@ -15,7 +15,7 @@ tar xvzf OrbFit5.0.7.tar.gz
 make
 
 cd lib
-wget https://epyc.astro.washington.edu/~maria8ch/jpleph
+wget -O jpleph https://ssd.jpl.nasa.gov/ftp/eph/planets/Linux/de431/lnxm13000p17000.431
 cp ~/orbfit/tests/bineph/testout/AST17.bai_431_fcct ~/orbfit/lib/AST17.bai
 cp ~/orbfit/tests/bineph/testout/AST17.bep_431_fcct ~/orbfit/lib/AST17.bep
 
