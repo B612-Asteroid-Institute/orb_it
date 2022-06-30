@@ -16,8 +16,8 @@ make
 
 cd lib
 wget https://epyc.astro.washington.edu/~maria8ch/jpleph
-wget https://epyc.astro.washington.edu/~maria8ch/AST17.bai
-wget https://epyc.astro.washington.edu/~maria8ch/AST17.bep
+cp ~/orbfit/tests/bineph/testout/AST17.bai_431_fcct ~/orbfit/lib/AST17.bai
+cp ~/orbfit/tests/bineph/testout/AST17.bep_431_fcct ~/orbfit/lib/AST17.bep
 
 cd ..
 cd ..
