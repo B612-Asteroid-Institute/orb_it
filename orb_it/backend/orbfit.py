@@ -311,7 +311,7 @@ class ORBFIT(Backend):
 
                 
                 subprocess.call(f'{home}/orbfit/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-                shutil.copy(f'{tdir}/temp.fou','/mnt/c/Users/berre/Desktop/CODE/Python/b612/ORBFIT/LOOK')
+                
                 v1 = open(f'{tdir}/temp.fou').read().split('\n')
                 for i in range(len(v1)):
                     if 'KepElem' in v1[i]:
