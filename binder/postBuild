@@ -18,3 +18,7 @@ cd lib
 wget https://epyc.astro.washington.edu/~maria8ch/jpleph
 wget https://epyc.astro.washington.edu/~maria8ch/AST17.bai
 wget https://epyc.astro.washington.edu/~maria8ch/AST17.bep
+
+cd ..
+cd ..
+python setup.py develop --no-deps
