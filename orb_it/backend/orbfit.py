@@ -349,7 +349,7 @@ class ORBFIT(Backend):
 
                 
                 subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-                shutil.copy(f'{tdir}/temp.fou','/mnt/c/Users/berre/Desktop/CODE/Python/b612/ORBFIT/LOOK')
+                
                 v1 = open(f'{tdir}/temp.fou').read().split('\n')
                 for i in range(len(v1)):
                     if 'KepElem' in v1[i]:
@@ -374,7 +374,7 @@ class ORBFIT(Backend):
                 for i in range(len(v2)):
                     if 'new elem values' in v2[i]:
                         val=v2[i+1]
-                shutil.copy(f'{tdir}/ls_out.txt','/mnt/c/Users/berre/Desktop/CODE/Python/b612/ORBFIT/LOOK')
+                
                 vec = np.array(val.split(),dtype=np.float64)
                 odd = pd.DataFrame()
                 odd['orbit_id'] = [orbit_id_i]
