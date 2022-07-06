@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    packages=find_packages(
-      where='.',
+   packages=find_packages(
+      where='..',
       include=['orb_it*']),
    use_scm_version={
       "write_to": "orb_it/version.py",

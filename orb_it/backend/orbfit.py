@@ -348,7 +348,9 @@ class ORBFIT(Backend):
                 #home = os.environ["HOME"]
 
                 
+
                 subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+
                 
                 v1 = open(f'{tdir}/temp.fou').read().split('\n')
                 for i in range(len(v1)):

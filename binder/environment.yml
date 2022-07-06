@@ -1,0 +1,14 @@
+channels:
+- default
+- conda-forge
+dependencies:
+- python=3.9
+- numpy
+- pandas
+- astropy
+- astroquery
+- matplotlib
+- ipykernel
+- setuptools>=45
+- findorb
+- openorb
