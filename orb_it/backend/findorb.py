@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import shutil
 import tempfile
@@ -41,9 +42,20 @@ ADES_KWARGS = {
 }
 
 class FINDORB(Backend):
+    '''
+    Find_Orb integrator backend for orb_it testing.
 
+    Keyword Arguments
+    -----------------
+    config_file : str, optional
+        Path to Find_Orb's configuration file.
+
+    Attributes
+    ----------
+    name : str
+        Name of the integrator.
+    '''
     def __init__(self, **kwargs):
-
         # Make sure only the correct kwargs
         # are passed to the constructor
         allowed_kwargs = FINDORB_CONFIG.keys()
@@ -58,7 +70,28 @@ class FINDORB(Backend):
                 kwargs[k] = FINDORB_CONFIG[k]
 
         super().__init__(name="FindOrb", **kwargs)
+        self.setup()
+        return
 
+    def setup(self):
+        # Check if 'fo' is on the path; if it isn't assume it's
+        # in the same directory as python (which is true for conda-based installs)
+        # and prepend that directory to the PATH.
+        #
+        # NOTE: we _must_ prepend to the PATH (however dirty it may be), because
+        # 'fo' behaves differently if called with a full path vs. if called as
+        # just 'fo'.
+        #
+        if shutil.which("fo") is None:
+            fo_dir = os.path.split(sys.executable)[0]
+            paths = os.environ["PATH"].split(":")
+            if fo_dir not in paths:
+                os.environ["PATH"] = fo_dir + ":" + os.environ["PATH"]
+
+        if shutil.which("fo") is None:
+            raise Exception("FATAL: FindOrb not found. FindOrb's `fo` executable must be on $PATH")
+
+        subprocess.call(["fo"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return
 
     def _writeTimes(self, file_name, times, time_scale):

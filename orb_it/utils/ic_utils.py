@@ -112,7 +112,7 @@ def eq1filePROP(orbit, tdir):
     return
 
 # Writes temporary .fop file for OrbFit
-def fopfile(tdir,obsc=''):
+def fopfile(tdir,ofd,obsc=''):
     '''
     Parameters
     ----------
@@ -173,10 +173,10 @@ def fopfile(tdir,obsc=''):
         reject.
                 .rejopp=.false.    ! reject entire opposition
         '''))
-    home = os.environ["HOME"]
+    #home = os.environ["HOME"]
     #home = os.path.join(os.path.dirname(os.path.dirname(__file__)), "orbf") 
-    shutil.copyfile(home+"/orbfit/lib/AST17.bai", f"{tdir}/AST17.bai")
-    shutil.copyfile(home+"/orbfit/lib/AST17.bep", f"{tdir}/AST17.bep")
+    shutil.copyfile(ofd+"/lib/AST17.bai", f"{tdir}/AST17.bai")
+    shutil.copyfile(ofd+"/lib/AST17.bep", f"{tdir}/AST17.bep")
 
     return
 
@@ -243,7 +243,7 @@ def ephHelp(start, stop, step, obs, tdir):
         
     return
 
-def fopOD(tdir):
+def fopOD(tdir,ofd):
     '''
     Parameters
     ----------
@@ -304,12 +304,12 @@ def fopOD(tdir):
         '''))
     home = os.environ["HOME"]
     #home = os.path.join(os.path.dirname(os.path.dirname(__file__)), "orbf") 
-    shutil.copyfile(home+"/orbfit/lib/AST17.bai", f"{tdir}/AST17.bai")
-    shutil.copyfile(home+"/orbfit/lib/AST17.bep", f"{tdir}/AST17.bep")
+    shutil.copyfile(ofd+"/lib/AST17.bai", f"{tdir}/AST17.bai")
+    shutil.copyfile(ofd+"/lib/AST17.bep", f"{tdir}/AST17.bep")
 
     return
 
-def fopOD2(tdir):
+def fopOD2(tdir,ofd):
     '''
     Parameters
     ----------
@@ -370,8 +370,8 @@ def fopOD2(tdir):
         '''))
     home = os.environ["HOME"]
     #home = os.path.join(os.path.dirname(os.path.dirname(__file__)), "orbf") 
-    shutil.copyfile(home+"/orbfit/lib/AST17.bai", f"{tdir}/AST17.bai")
-    shutil.copyfile(home+"/orbfit/lib/AST17.bep", f"{tdir}/AST17.bep")
+    shutil.copyfile(ofd+"/lib/AST17.bai", f"{tdir}/AST17.bai")
+    shutil.copyfile(ofd+"/lib/AST17.bep", f"{tdir}/AST17.bep")
 
     return
 

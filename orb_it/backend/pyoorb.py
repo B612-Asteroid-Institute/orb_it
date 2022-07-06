@@ -10,6 +10,7 @@ import uuid
 import tempfile
 import glob
 from .backend import Backend
+import shutil
 
 rad = np.pi / 180.0
 
@@ -24,7 +25,28 @@ PYOORB_CONFIG = {
 }
 
 class PYOORB(Backend):
+    '''
+    Open Orb integrator backend for orb_it testing.
 
+    Keyword Arguments
+    -----------------
+    dynamical_model : str, optional
+        The dynamical model the integrator uses. Defaults to "N".
+    ephemeris_file : str, optional
+        Name of the ephemeris file the integrator uses. Defaults to "de430.dat".
+    config_path : str, optional
+        Defines the path to the "data" folder where OORB configuration files are.
+    multi_ranging : int, optional
+        Indicates which multi_ranging method to use for an initial Orbit Determination fit. Defaults to 1.
+        0 for no multi_ranging, all observations are given for initial fit. (Can be unstable for long arcs, more stable for short arcs)
+        1 for basic multi_ranging, observations are split up into groups of 3-4, then fit separately. (Somewhat stable for longer arcs)
+        2 for OrbFit style ranging, the first, middle, and last observations are only given to the fitter. (Somewhat stable for longer arcs)
+
+    Attributes
+    ----------
+    name : str
+        Name of the integrator.
+    '''
     def __init__(self, **kwargs):
         # Make sure only the correct kwargs
         # are passed to the constructor
@@ -227,7 +249,7 @@ class PYOORB(Backend):
         epochs_pyoorb = np.array(list(np.vstack([epochs, time_scale]).T), dtype=np.double, order='F')
         return epochs_pyoorb
 
-    def _propagateOrbits(self, orbits, t1):
+    def _propagateOrbits(self, orbits, t1, out_dir=None):
         """
         Propagate orbits using PYOORB.
 
@@ -325,16 +347,20 @@ class PYOORB(Backend):
         if orbits.ids is not None:
             propagated["orbit_id"] = orbits.ids[propagated["orbit_id"].values]
 
+        if out_dir is not None:
+            os.makedirs(os.path.join(out_dir,'propagation'),exist_ok=True)
+            propagated.to_csv(os.path.join(out_dir,'propagation','propagated.csv'),index=False)
+
         return propagated
 
-    def _generateEphemeris(self, orbits, observers):
+    def _generateEphemeris(self, orbits, observers, out_dir=None):
         """
         Generate ephemeris using PYOORB.
 
         Parameters
         ----------
         orbits : `~orb_it.raiden.Orbits`
-            Orbits to propagate. See orbit_type for expected input format.
+            Orbits to propagate. See for expected input format.
         observers : dict
             A dictionary with observatory codes as keys and observation_times (`~astropy.time.core.Time`) as values.
 
@@ -429,6 +455,10 @@ class PYOORB(Backend):
         if orbits.ids is not None:
             ephemeris["orbit_id"] = orbits.ids[ephemeris["orbit_id"].values]
 
+        if out_dir is not None:
+            os.makedirs(os.path.join(out_dir,'ephemeris'),exist_ok=True)
+            ephemeris.to_csv(os.path.join(out_dir,'ephemeris','ephemerides.csv'),index=False)
+
         return ephemeris
 
     def _orbitDetermination(self,observations,out_dir=None):
@@ -445,6 +475,7 @@ class PYOORB(Backend):
         Returns
         -------
         od_orbits : `~pandas.DataFrame`
+            Cartesian orbital state vectors fit from observations given.
         """
         od_res = []
         _observations = observations.copy()
@@ -718,6 +749,37 @@ class PYOORB(Backend):
                     data=pd.DataFrame([np.full_like(OD_COLUMNS,np.nan)],columns=OD_COLUMNS)
                     data['orbit_id'] = orbit_id
                 od_res.append(data)
+
+                if out_dir is not None and b1:
+                    chkf=os.path.join('mrw.txt')
+                    if os.path.exists(chkf):
+                        vf= open(chkf).read().split('\n')
+                        if vf[1] == 'y':
+                            shutil.copytree(
+                                temp_dir_i,
+                                os.path.join(out_dir,'orbit_determination'),
+                                dirs_exist_ok=True
+                            )
+                    else:
+                        chk = input('Multi Range can generate a lot of files, do you want to write all to out_dir (y or n)?\n'+
+                        'You will only be asked once, after this a multi_range waiver (mrw.txt) will be generated in your current directory.\n'+
+                        'To be asked this prompt again, delete mrw.txt or move to another directory.\n')
+                        with open('mrw.txt','w')as fw:
+                            fw.write('Multi Range can generate a lot of files, do you want to write all to out_dir (y or n)?\n'+chk)
+                            fw.close()
+                        if chk =='y':
+                            shutil.copytree(
+                            temp_dir_i,
+                            os.path.join(out_dir,'orbit_determination'),
+                            dirs_exist_ok=True
+                            )
+                elif out_dir is not None:
+                       shutil.copytree(
+                                temp_dir_i,
+                                os.path.join(out_dir,'orbit_determination'),
+                                dirs_exist_ok=True
+                            )        
+
         od_orbits = pd.concat(od_res, ignore_index=True)
         return od_orbits
 

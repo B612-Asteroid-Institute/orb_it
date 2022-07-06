@@ -9,6 +9,58 @@ CARTESIAN_UNITS = [u.au, u.au, u.au, u.au / u.d,  u.au / u.d,  u.au / u.d]
 REQ_COLS = CARTESIAN_COLS
 
 class Orbits():
+    '''
+    Orbits class to handle state vector orbits for orb_it testing.
+
+    Parameters
+    ----------
+    data : str or `~pandas.DataFrame`
+        Path to the .csv file or pandas DataFrame containing the orbit data.
+        Must have the following columns:
+            x : float
+                x element of the state vector in Astronomical Units.
+            y : float
+                y element of the state vector in Astronomical Units.
+            z : float
+                z element of the state vector in Astronomical Units.
+            vx : float
+                x velocity element of the state vector in Astronomical Units per day.
+            vy : float
+                y velocity element of the state vector in Astronomical Units per day.
+            vz : float
+                z velocity element of the state vector in Astronomical Units per day.
+            epoch or mjd_tdb : float, also can be a astropy.time.core.Time object converted to float
+                Time of the state vector in mjd with a tdb scale.
+    epochs : List of `~astropy.time.core.Time`, optional
+        Times corresponding to the state vectors given.
+    ids : list of strings, optional
+        Names or orbit ids of the objects/orbits given.
+    H : list of floats, optional
+        List of Magnitudes for the orbits given.
+    G : list of floats, optional
+        List of Magnitude Slopes for the orbits given.
+
+    Attributes
+    ----------
+    data : `~pandas.DataFrame`
+        Unformatted DataFrame given at initialization.
+    df : `~pandas.DataFrame`
+        Standard formatted DataFrame of data given.
+    epochs : List of `~astropy.time.core.Time`
+        Astropy time object of all the times for every orbit. In mjd format and tdb scale.
+    num_orbits : int
+        Number of orbits contained in the object.
+    ids : `~numpy.ndrray`
+        List of names of the objects/orbits given.
+    cartesian : 2D,`~numpy.ndarray`
+        List of the cartestian state vectors (x, y, z, vx, vy, vz) for each orbit.
+    cartesian_units : list of `~astropy.units`
+        List of units used for the state vectors.
+    H : list of floats or None
+        List of Magnitudes for the orbits given.
+    G : list of floats or None
+        List of Magnitude Slopes for the orbits given.
+    '''
     def __init__(self, data,
                  epochs=None,
                  ids=None,
