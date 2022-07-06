@@ -97,11 +97,16 @@ def doTest(orbit, observatory_code, dts, backend, astrometric_error=None,  full_
         #print(f"Error in {backend.name} _orbitDetermination")
         return error_state(orbit, observatory_code, backend, astrometric_error, full_output, ephemeris)
 
+    # if od_orbit.epochs is really close to last observation time use observation_times[-1:]
+    if abs(od_orbit.epochs.mjd[0]-observation_times[-1:][0].mjd) < 0.5e-5:
+        t1 = observation_times[-1:]
+    else:
+        t1 = od_orbit.epochs
     try:
         if full_output:
-            prop_orbit,ret3 = backend._propagateOrbits(orbit, observation_times[-1:], out_dir=outd,full_output=full_output)
+            prop_orbit,ret3 = backend._propagateOrbits(orbit, t1, out_dir=outd,full_output=full_output)
         else:
-            prop_orbit = backend._propagateOrbits(orbit, od_orbit.epochs, out_dir=outd)
+            prop_orbit = backend._propagateOrbits(orbit, t1, out_dir=outd)
     except:
         logging.error(f"{orbit.ids[0]} failed to run _propagateOrbits using {backend.name}")
         #print(f"Error in {backend.name} _propagateOrbits")
