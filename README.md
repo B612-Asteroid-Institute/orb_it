@@ -4,7 +4,7 @@
 
 **Orb_it** is a soon-to-be end-to-end testing package that will be able to test orbit prediction accuracy for Open Source Orbit Integrators such as [Find_Orb](https://www.projectpluto.com/find_orb.htm), [OpenOrb](https://github.com/oorb/oorb), and [OrbFit](http://adams.dm.unipi.it/~orbmaint/orbfit/OrbFit/doc/help.html). It currently *only* works for Find_Orb, OpenOrb, and OrbFit on Unix based systems. This is an expansion of the earlier testing platform [Validate Find_Orb](https://github.com/B612-Asteroid-Institute/validate_findorb), and shares many features with it.
 
-
+You can find documentation and helpful information on the [orb_it wiki](https://github.com/B612-Asteroid-Institute/orb_it/wiki).
 ## Installation and Dependencies
 
 **This project requires** a Linux Based System, Python 3, and working *current* installation of each integrator (preferably installed with conda if possible). It is beneficial to also have a [conda based package manager](https://docs.conda.io/en/latest/) and [Jupyter](https://jupyter.org/) for ease of use.
