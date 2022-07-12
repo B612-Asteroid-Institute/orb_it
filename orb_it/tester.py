@@ -8,6 +8,7 @@ from astropy import units as u
 from astroquery.jplhorizons import Horizons
 from shutil import copy
 from .raiden import Orbits
+from .backend import Backend
 
 logging.basicConfig(handlers=[logging.FileHandler('testing.log'),logging.StreamHandler()],level=logging.INFO,format='%(asctime)s, %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -250,6 +251,12 @@ def runTest(orbits, observatory_code, dts, backend, astrometric_error=None, full
     except:
         errors = [astrometric_error]
     
+    if isinstance(backend,(list,np.ndarray)) and isinstance(backend[0],Backend):
+        pass
+    elif isinstance(backend,Backend):
+        backend = [backend]
+    else:
+        raise ValueError
     #1-D cases
     #array of ints np.ndarray: [1,2,3,...]
     if isinstance(dts, (list,np.ndarray)) and isinstance(dts[0], (int,float,np.int64,np.float64)):
@@ -269,8 +276,9 @@ def runTest(orbits, observatory_code, dts, backend, astrometric_error=None, full
         #this will iterate over unique dts for each orbit
             for k in range(len(errors)):
                 for l in range(len(observatory_code)):
-                    result = doTest(orbits[i],observatory_code[l],dts[i],astrometric_error=errors[k],out=out, full_output=full_output, backend=backend)
-                    results_i.append(result)
+                    for m in range(len(backend)):
+                        result = doTest(orbits[i],observatory_code[l],dts[i],astrometric_error=errors[k],out=out, full_output=full_output, backend=backend[m])
+                        results_i.append(result)
         results = pd.concat(
             results_i,
             ignore_index=True
@@ -288,8 +296,9 @@ def runTest(orbits, observatory_code, dts, backend, astrometric_error=None, full
         for j in range(len(dts)):
             for k in range(len(errors)):
                 for l in range(len(observatory_code)):
-                    result = doTest(orbits[i],observatory_code[l],dts[j],astrometric_error=errors[k],out=out, full_output=full_output, backend=backend)
-                    results_i.append(result)
+                    for m in range(len(backend)):
+                        result = doTest(orbits[i],observatory_code[l],dts[j],astrometric_error=errors[k],out=out, full_output=full_output, backend=backend[m])
+                        results_i.append(result)
     results = pd.concat(
         results_i,
         ignore_index=True
