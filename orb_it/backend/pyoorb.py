@@ -259,6 +259,9 @@ class PYOORB(Backend):
             Orbits to propagate. See orbit_type for expected input format.
         t1 : `~astropy.time.core.Time`
             Epoch in MJD to which to propagate the orbits.
+        out_dir : str, optional
+            Save input and output files to this directory. Will create
+            a sub directory called propagation inside this directory.
 
         Returns
         -------
@@ -363,6 +366,9 @@ class PYOORB(Backend):
             Orbits to propagate. See for expected input format.
         observers : dict
             A dictionary with observatory codes as keys and observation_times (`~astropy.time.core.Time`) as values.
+        out_dir : str, optional
+            Save input and output files to this directory. Will create
+            a sub directory called ephemeris inside this directory.
 
         Returns
         -------

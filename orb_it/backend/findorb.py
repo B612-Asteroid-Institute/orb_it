@@ -178,6 +178,8 @@ class FINDORB(Backend):
             Orbits to propagate.
         t1 : `~astropy.time.core.Time`
             Times to which to propagate each orbit.
+        full_output : bool, optional
+            Returns process_returns from propagation function.
         out_dir : str, optional
             Save input and output files to this directory. Will create
             a sub directory called propagation inside this directory.
@@ -186,6 +188,7 @@ class FINDORB(Backend):
         -------
         propagated : `~pandas.DataFrame`
             Orbits propagated to t1 (sorted by orbit_ids and t1).
+        If full_output is True,
         process_returns : list
             List of subprocess CompletedProcess objects.
         """
@@ -339,6 +342,8 @@ class FINDORB(Backend):
             Orbits to propagate.
         observers : dict or `~pandas.DataFrame`
             A dictionary with observatory codes as keys and observation_times (`~astropy.time.core.Time`) as values.
+        full_output : bool, optional
+            Returns process_returns with ephemeris.
         out_dir : str, optional
             Save input and output files to this directory. Will create
             a sub directory called ephemeris inside this directory.
@@ -347,6 +352,7 @@ class FINDORB(Backend):
         -------
         ephemeris : `~pandas.DataFrame`
             Ephemerides for each orbit and observer.
+        If full_output is True,
         process_returns : list
             List of subprocess CompletedProcess objects.
         """
@@ -551,7 +557,7 @@ class FINDORB(Backend):
         observations : `~pandas.DataFrame`
             DataFrame containing the observational data.
         full_output : `bool`, optional
-            If True, return the ephemeris and the process return codes and residuals.
+            If True, return the process return codes and residuals.
         out_dir : `str`, optional
             Path to the output directory.
         

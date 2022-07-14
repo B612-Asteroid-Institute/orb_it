@@ -168,20 +168,19 @@ def runTest(orbits, observatory_code, dts, backend, astrometric_error=None, full
     dts : array of floats, 2D array of floats, or list of `~astropy.time.core.Time` objects with the same length as `orbits`
         List of observation times after the initial time to test the orbits over. Measured in days.
         NOTE: Anything passed to this parameter must have values in ASCENDING ORDER.
-    backend : backend object `~orb_it.backend.backend.BACKEND`
-        Integrator backend to be used for the test.
+    backend : backend object `~orb_it.backend.backend.BACKEND` or list of backend objects.
+        Integrator backend(s) to be used for the test.
     astrometric_error : float or list of floats, optional
         Astrometric error to be added to the generated observations. 
         If None, no astrometric error is added. Units are milliarcseconds.
     full_output : bool, optional
         If True, returns the full output of the test including residuals and covariance matrices.
-        DOES NOT WORK WITH PYOORB CURRENTLY.
+        DOES NOT WORK WITH PYOORB or ORBFIT CURRENTLY.
     out : str, optional
         Path to the output directory for saving necessary files for this test to be
         run independently. This includes configuration files, generated files, and bash scripts. 
         It has the file structure '{out}/{orbit_id}/{days propagated}days_{error}mas_{timestamp}'. 
         If None, no files are saved.
-        DOES NOT WORK WITH PYOORB CURRENTLY.
     
     Returns
     -------

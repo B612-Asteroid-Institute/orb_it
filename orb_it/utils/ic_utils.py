@@ -5,16 +5,15 @@ from astropy.time import Time
 
 def eq1file(orbit, tdir):
     '''
+    Generates a temp.eq1 file in a temporary directory to run OrbFit.
+
     Parameters
     ----------
-    el_jpl : `~numpy.ndarray` (N, 18)
-        Orbital elements as determined by JPL Horizons.
+    orbit : `~orb_it.raiden.Orbits`
+        Orbit for file generation
     tdir : `tf.TemporaryDirectory`
         Temporary directory object, temp directory for file generation
-        
-    Returns
-    ------- 
-    temp.eq1: temporary text file to run OrbFit
+    
     '''  
     
     os.makedirs(f'{tdir}/epoch',exist_ok=True)
@@ -59,16 +58,15 @@ def eq1file(orbit, tdir):
 
 def eq1filePROP(orbit, tdir):
     '''
+    Generates a temp.eq1 file in a temporary directory to run OrbFit, for propagation.
+
     Parameters
     ----------
-    el_jpl : `~numpy.ndarray` (N, 18)
-        Orbital elements as determined by JPL Horizons.
+    orbit : `~orb_it.raiden.Orbits`
+        Orbit for file generation
     tdir : `tf.TemporaryDirectory`
         Temporary directory object, temp directory for file generation
         
-    Returns
-    ------- 
-    temp.eq1: temporary text file to run OrbFit
     '''  
     
     os.makedirs(f'{tdir}/epoch',exist_ok=True)
@@ -111,17 +109,20 @@ def eq1filePROP(orbit, tdir):
     
     return
 
-# Writes temporary .fop file for OrbFit
+
 def fopfile(tdir,ofd,obsc=''):
     '''
+    Writes temporary temp.fop file in a temporary dircetory for OrbFit.
+
     Parameters
     ----------
     tdir : `tf.TemporaryDirectory`
         Temporary directory object, temp directory for file generation
-    
-    Returns
-    ------- 
-    temp.fop: temporary text file to run OrbFit
+    ofd : str,
+        OrbFit directory location. To find necessary files to run.
+    obsc : str, optional,
+        Observatory code of observations.
+
     '''
         
     with open(f"{tdir}/temp.fop", "w") as fp:
@@ -183,20 +184,15 @@ def fopfile(tdir,ofd,obsc=''):
 
 def propHelp(stop, tdir):
     '''
+    Generates an ast.inp text file required to bypass OrbFit interactive menu, for propagation.
+
     Parameters
-    ----------
-    start : `str`
-        Beginning time of integration, UTC.  
-    stop : `str`
-        End time of integration, UTC.   
-    obs : `str`
-        Observatory code.
+    ----------  
+    stop : `~astropy.time.core.Time`
+        End time of integration, TT.   
     tdir : `tf.TemporaryDirectory`
         Temporary directory object, temp directory for file generation
         
-    Returns
-    ------- 
-    ast.inp: text file required to bypass OrbFit interactive menu
     '''
     
     with open(f"{tdir}/ast.inp", "w") as fp:
@@ -213,20 +209,20 @@ def propHelp(stop, tdir):
 
 def ephHelp(start, stop, step, obs, tdir):
     '''
+    Generates an ast.inp text file required to bypass OrbFit interactive menu, for ephemeris.
     Parameters
     ----------
-    start : `str`
-        Beginning time of integration, UTC.  
-    stop : `str`
-        End time of integration, UTC.   
+    start : `~astropy.time.core.Time`
+        Beginning time of integration.  
+    stop : `~astropy.time.core.Time`
+        End time of integration.   
+    step : float,
+        Time between observations. In days.
     obs : `str`
         Observatory code.
     tdir : `tf.TemporaryDirectory`
         Temporary directory object, temp directory for file generation
         
-    Returns
-    ------- 
-    ast.inp: text file required to bypass OrbFit interactive menu
     '''
     
     with open(f"{tdir}/ast.inp", "w") as fp:
@@ -375,19 +371,19 @@ def fopOD2(tdir,ofd):
 
     return
 
-#FOR OD PART 2
+#
 def eqOD(orbit, tdir):
     '''
+    FOR OD PART 2, Generetes temp.eq1, temporary text file to run OrbFit.
+
     Parameters
     ----------
-    el_jpl : `~numpy.ndarray` (N, 18)
-        Orbital elements as determined by JPL Horizons.
+    orbit : `~orb_it.raiden.Orbits`
+        Orbit for file generation
     tdir : `tf.TemporaryDirectory`
         Temporary directory object, temp directory for file generation
-        
-    Returns
-    ------- 
-    temp.eq1: temporary text file to run OrbFit
+ 
+    
     '''  
     
     os.makedirs(f'{tdir}/epoch',exist_ok=True)
@@ -429,23 +425,16 @@ def eqOD(orbit, tdir):
          '''))
     
     return
-# FOR Initial Orbit State guess
+ 
 def od1Help(tdir):
     '''
+    FOR Initial Orbit State guess.
+
     Parameters
     ----------
-    start : `str`
-        Beginning time of integration, UTC.  
-    stop : `str`
-        End time of integration, UTC.   
-    obs : `str`
-        Observatory code.
     tdir : `tf.TemporaryDirectory`
         Temporary directory object, temp directory for file generation
         
-    Returns
-    ------- 
-    ast.inp: text file required to bypass OrbFit interactive menu
     '''
     
     with open(f"{tdir}/ast.inp", "w") as fp:
@@ -458,23 +447,16 @@ def od1Help(tdir):
         '''))
         
     return
-# FOR Least Squares improvements
+
 def od2Help(tdir):
     '''
+    For Least Squares improvements
+
     Parameters
     ----------
-    start : `str`
-        Beginning time of integration, UTC.  
-    stop : `str`
-        End time of integration, UTC.   
-    obs : `str`
-        Observatory code.
     tdir : `tf.TemporaryDirectory`
         Temporary directory object, temp directory for file generation
         
-    Returns
-    ------- 
-    ast.inp: text file required to bypass OrbFit interactive menu
     '''
     
     with open(f"{tdir}/ast.inp", "w") as fp:
