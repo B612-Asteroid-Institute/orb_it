@@ -341,6 +341,34 @@ class ORBFIT(Backend):
                             i+=1
                         f.close()
                     fopOD2(tdir=tdir,ofd=self.orbfit_path)
+                    od1Help(tdir=tdir)
+                
+                    #home = os.environ["HOME"]
+
+                
+
+                    subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+
+                    
+                    v1 = open(f'{tdir}/temp.fou').read().split('\n')
+                    for i in range(len(v1)):
+                        if 'KepElem' in v1[i]:
+                            lin = v1[i]
+                            break
+                    a1=np.array(lin.split()[1:-2],dtype=np.float64)
+                    a1=np.append(a1,np.float64(lin.split()[-1].replace(')','')))
+                    fopOD2(tdir=tdir,ofd=self.orbfit_path)
+                    eqOD(a1,tdir)
+                    od2Help(tdir)
+                    with open(f'{tdir}/ls_out.txt','w') as f2:
+                        subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=f2,stderr=subprocess.DEVNULL)
+                        f2.close()
+                    
+                    v2= open(f'{tdir}/ls_out.txt').read().split('\n')
+                    for i in range(len(v2)):
+                        if 'new elem values' in v2[i]:
+                            val=v2[i+1]
+                    
                 else:
                     fopOD(tdir=tdir,ofd=self.orbfit_path)
                 od1Help(tdir=tdir)
