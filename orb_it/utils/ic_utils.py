@@ -472,3 +472,24 @@ def od2Help(tdir):
         '''))
         
     return
+
+def od2Help2(tdir):
+    '''
+    For Least Squares improvements
+
+    Parameters
+    ----------
+    tdir : `tf.TemporaryDirectory`
+        Temporary directory object, temp directory for file generation
+        
+    '''
+    
+    with open(f"{tdir}/ast.inp", "w") as fp:
+        fp.write(ddent(f'''\
+        temp
+        3
+        1
+        0
+        '''))
+        
+    return

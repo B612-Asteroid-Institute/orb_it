@@ -356,50 +356,55 @@ class ORBFIT(Backend):
                             lin = v1[i]
                             break
                     a1=np.array(lin.split()[1:-2],dtype=np.float64)
-                    a1=np.append(a1,np.float64(lin.split()[-1].replace(')','')))
+                    tim=np.float64(lin.split()[-1].replace(')',''))
+                    a1=np.append(a1,tim)
                     fopOD2(tdir=tdir,ofd=self.orbfit_path)
                     eqOD(a1,tdir)
-                    od2Help(tdir)
+                    od2Help2(tdir)
                     with open(f'{tdir}/ls_out.txt','w') as f2:
                         subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=f2,stderr=subprocess.DEVNULL)
                         f2.close()
-                    
+                    #shutil.copy(f'{tdir}/ls_out.txt','/mnt/c/Users/berre/Desktop/CODE/Python/b612/ORBFIT/ls_df1.txt')
                     v2= open(f'{tdir}/ls_out.txt').read().split('\n')
                     for i in range(len(v2)):
                         if 'new elem values' in v2[i]:
                             val=v2[i+1]
-                    
+                    print('doublefit')
+                    a1=np.array(val.split(),dtype=np.float64)
+                    a1=np.append(a1,tim)
+                    a1[2:-1]=a1[2:-1]*180/np.pi
                 else:
                     fopOD(tdir=tdir,ofd=self.orbfit_path)
-                od1Help(tdir=tdir)
-                
-                #home = os.environ["HOME"]
+                    od1Help(tdir=tdir)
+                    
+                    #home = os.environ["HOME"]
 
-                
+                    
 
-                subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                    subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 
-                
-                v1 = open(f'{tdir}/temp.fou').read().split('\n')
-                for i in range(len(v1)):
-                    if 'KepElem' in v1[i]:
-                        lin = v1[i]
-                        break
-                a1=np.array(lin.split()[1:-2],dtype=np.float64)
-                a1=np.append(a1,np.float64(lin.split()[-1].replace(')','')))
-                # for i in range(len(v1)):
-                #     if 'preliminary orbit elements' in v1[i]:
-                #         tim = v1[i].split()[-1]
-                #         elem = np.array(v1[i+1].split(),dtype=np.float64)
-                #         break
-                # a1=np.append(elem,np.float64(tim))
+                    
+                    v1 = open(f'{tdir}/temp.fou').read().split('\n')
+                    for i in range(len(v1)):
+                        if 'KepElem' in v1[i]:
+                            lin = v1[i]
+                            break
+                    a1=np.array(lin.split()[1:-2],dtype=np.float64)
+                    a1=np.append(a1,np.float64(lin.split()[-1].replace(')','')))
+                    # for i in range(len(v1)):
+                    #     if 'preliminary orbit elements' in v1[i]:
+                    #         tim = v1[i].split()[-1]
+                    #         elem = np.array(v1[i+1].split(),dtype=np.float64)
+                    #         break
+                    # a1=np.append(elem,np.float64(tim))
                 fopOD(tdir=tdir,ofd=self.orbfit_path)
+                print(a1)
                 eqOD(a1,tdir)
                 od2Help(tdir)
                 with open(f'{tdir}/ls_out.txt','w') as f2:
                     subprocess.call(f'{self.orbfit_path}/src/fitobs/fitobs.x < ast.inp',cwd=tdir,shell=True,stdout=f2,stderr=subprocess.DEVNULL)
                     f2.close()
-                
+                #shutil.copy(f'{tdir}/ls_out.txt','/mnt/c/Users/berre/Desktop/CODE/Python/b612/ORBFIT/ls_df2.txt')
                 v2= open(f'{tdir}/ls_out.txt').read().split('\n')
                 for i in range(len(v2)):
                     if 'new elem values' in v2[i]:
