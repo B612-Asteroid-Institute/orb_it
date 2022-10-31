@@ -41,7 +41,7 @@ Then check if its properly installed by typing in the python command line,
 >>> import orb_it
 ```
 
-BIG NOTE:
-**This project is still in REALLY ACTIVE development** and will have full documentation and a working demo soon!
+NOTE:
+**This project is still in active development**
 
-If you have any more questions email me here: aidan@b612foundation.org
+If you have any more questions email me here: aberres2@illinois.edu
